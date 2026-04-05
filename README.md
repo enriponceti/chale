@@ -46,13 +46,29 @@ O arquivo `script` foi usado como base, mas ele possui alguns pontos que devem s
 - existem colunas com comentarios de status textuais mas tipos `INTEGER`; para o sistema, foi padronizado como `String/enum`
 - existe chave estrangeira duplicada em `apps.reserva` para `id_chale`
 
+## Requisitos
+
+- Node.js `22`
+- npm `10+`
+- PostgreSQL disponivel localmente
+
 ## Como iniciar
 
-1. Configurar o banco PostgreSQL
-2. Ajustar `apps/api/.env`
-3. Instalar dependencias com `npm install`
-4. Rodar a API com `npm run dev:api`
-5. Rodar o painel com `npm run dev:web`
+1. Instalar dependencias com `npm install`
+2. Configurar o banco PostgreSQL
+3. Ajustar `apps/api/.env`
+4. Gerar o client do Prisma com `npm run prisma:generate`
+5. Rodar a API com `npm run dev:api`
+6. Rodar o painel com `npm run dev:web`
+
+## Scripts principais
+
+- `npm run dev:api`: sobe a API em desenvolvimento
+- `npm run dev:web`: sobe o frontend Next.js
+- `npm run build`: build completo do monorepo
+- `npm run typecheck`: typecheck da API e do frontend
+- `npm run prisma:generate`: regenera o Prisma Client da API
+- `npm run check`: executa `prisma generate`, `typecheck` e `build`
 
 ## Modos de execucao da API
 
@@ -65,7 +81,7 @@ Quando for usar PostgreSQL real:
 
 1. ajustar `DATABASE_URL`
 2. definir `USE_MOCK_DATA=false`
-3. rodar `npx prisma generate --schema apps/api/prisma/schema.prisma`
+3. rodar `npm run prisma:generate`
 4. aplicar a estrutura do banco ou migrations
 
 ## Autenticacao inicial
@@ -104,88 +120,53 @@ As rotas `POST`, `PUT` e `DELETE` de `chales`, `clientes` e `reservas` exigem `A
 - frontend consumindo a API com fallback local
 - backend preparado para alternar entre memoria e Prisma
 
-## Atualizacao da retomada
+## Pipeline de desenvolvimento
 
-Ponto atualizado em 03/04/2026:
+O repositorio agora esta integrado ao GitHub com uma base minima de desenvolvimento.
 
-- tela de login implementada no frontend
-- token da API armazenado no painel
-- rotas protegidas no frontend com redirecionamento para `/login`
-- operacoes de `POST`, `PUT` e `DELETE` conectadas no frontend para `chales`, `clientes` e `reservas`
-- endpoint adicional `GET /api/reservas/detalhadas` criado para suportar edicao de reservas no painel
-- CRUD de `comodidades` implementado na API
-- relacionamento `chale_comodidade` implementado na API e conectado ao menu de acoes de `chales`
-- novo modulo `Comodidades` criado no menu principal com listagem em tabela, cadastro, edicao e exclusao
-- layout administrativo padronizado entre `chales`, `clientes`, `reservas` e `comodidades`
-- `apps/api/.env` criado com `USE_MOCK_DATA=false`
+- branch principal `main` protegida no GitHub
+- fluxo de entrega via branch + pull request
+- workflow de CI em `.github/workflows/ci.yml`
+- templates de PR e issues em `.github/`
+- `Dependabot` configurado para atualizacoes semanais
+- upgrades `major` de `prisma` e `@prisma/client` bloqueados no `Dependabot`
+- `CODEOWNERS` configurado para `@enriponceti`
+
+## Fluxo recomendado com GitHub
+
+1. criar uma branch a partir da `main`
+2. desenvolver e validar localmente com `npm run check`
+3. fazer push da branch
+4. abrir pull request
+5. aguardar o `CI`
+6. revisar e fazer merge na `main`
+
+## Retomada
+
+Ponto consolidado em 05/04/2026:
+
+- frontend com login, sessao e CRUD autenticado para `chales`, `clientes`, `reservas` e `comodidades`
+- endpoint `GET /api/reservas/detalhadas` disponivel para suporte ao painel
+- API de relacionamento `chale_comodidade` implementada
+- menu principal atualizado com o modulo `Comodidades`
+- `apps/api/.env` configurado para PostgreSQL real com `USE_MOCK_DATA=false`
 - `Prisma Client` regenerado com sucesso
-- schema `apps` do PostgreSQL confirmado existente e vazio
-- `apps/api` com `build` validado apos os ajustes locais
-
-Validacao adicional executada no fim do dia em 03/04/2026:
-
-- `npm run dev:api` subido com sucesso em `http://localhost:3333`
-- `npm run dev:web` subido com sucesso em `http://localhost:3000`
-- rota `/comodidades` validada com resposta `200 OK`
-- CRUD de `comodidades` validado com sucesso na API:
-  - criacao
-  - listagem
-  - edicao
-  - exclusao
-- vinculo de `comodidades` em `chales` validado via `PUT /api/chales/:id/comodidades`
-- ambiente limpo ao final da validacao:
-  - comodidade de teste removida
-  - vinculacao do `chale` restaurada ao estado anterior
-
-Pendencia atual:
-
-- revisar visualmente no navegador a tela `Comodidades`, agora que a rota e o CRUD ja foram validados tecnicamente
-- seguir para os proximos modulos ainda nao implementados
+- schema `apps` do PostgreSQL sincronizado
+- `npm run check` validado localmente
+- CI do GitHub validada em pull request e em `main`
 
 Importante ao voltar:
 
 - o banco `dbchale` responde em `localhost:5432`
-- o schema `apps` ja foi sincronizado com sucesso via Prisma
-- a ultima validacao do frontend passou com `npm run build -w apps/web`
-- a ultima validacao do backend passou com `npm run build -w apps/api`
+- como `USE_MOCK_DATA=false`, as listagens reais podem aparecer vazias ate cadastrar os primeiros registros
+- a branch protegida nao aceita push direto em `main`
 
-Comandos para retomar:
+Proximo passo recomendado:
 
-1. `npm run dev:api`
-2. `npm run dev:web`
-3. validar no navegador o fluxo visual de `comodidades`
-4. testar login e fluxo completo de `chales`, `comodidades`, `clientes` e `reservas`
-
-Observacao:
-
-- o `db push` final foi aplicado com sucesso ao banco `dbchale`
-- como `USE_MOCK_DATA=false`, as listagens reais podem aparecer vazias ate cadastrar os primeiros `chales` e `clientes`
-
-## Retomada
-
-Ultimo ponto concluido:
-
-- frontend com login, sessao e CRUD autenticado para `chales`, `clientes`, `reservas` e `comodidades`
-- `apps/api/.env` configurado para PostgreSQL real com `USE_MOCK_DATA=false`
-- `Prisma Client` regenerado
-- `npx prisma db push --schema prisma/schema.prisma --skip-generate --accept-data-loss` executado com sucesso
-- `npm run build -w apps/api` validado
-- `npm run build -w apps/web` validado
-- menu principal atualizado com a nova opcao `Comodidades`
-- tela `Comodidades` criada com grid no mesmo padrao das demais telas
-- API de relacionamento `chale_comodidade` implementada para vincular comodidades aos chales
-- `npm run dev:api` validado
-- `npm run dev:web` validado
-- rota `/comodidades` validada com `200 OK`
-- CRUD real de `comodidades` validado na API
-- vinculo real de `comodidades` em `chales` validado e restaurado ao estado original
-
-Proximo passo recomendado para continuar amanha:
-
-1. subir `npm run dev:api` e `npm run dev:web`
-2. validar visualmente no navegador a tela `/comodidades` e o fluxo pelos botoes da interface
-3. validar o vinculo de comodidades diretamente pela UI de `chales`
-4. seguir para a proxima frente funcional ainda nao coberta no painel
+1. subir `npm run dev:api`
+2. subir `npm run dev:web`
+3. validar visualmente o fluxo de `comodidades` no navegador
+4. validar o vinculo de comodidades diretamente pela UI de `chales`
 5. validar persistencia real no PostgreSQL para `chales`, `comodidades`, `clientes` e `reservas`
 
 Depois disso:
