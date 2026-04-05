@@ -1,0 +1,29 @@
+name: Feature request
+description: Proponha uma melhoria de produto ou desenvolvimento.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto
+      description: Qual problema ou oportunidade motivou esta ideia?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposta
+      description: Descreva a solução desejada.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite
+      description: Como vamos saber que a entrega ficou pronta?
+  - type: textarea
+    id: notes
+    attributes:
+      label: Observações adicionais

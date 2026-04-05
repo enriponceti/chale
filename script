@@ -1,0 +1,406 @@
+
+CREATE TABLE apps.checklist_item_modelo (
+                id INTEGER NOT NULL,
+                descricao VARCHAR NOT NULL,
+                area VARCHAR NOT NULL,
+                obrigatorio BOOLEAN NOT NULL,
+                ordem INTEGER NOT NULL,
+                status VARCHAR NOT NULL,
+                CONSTRAINT checklist_item_modelo PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.checklist_item_modelo IS 'Separar os itens permite reaproveitar e padronizar.
+
+Exemplos de itens:
+Limpar banheiro
+Trocar roupas de cama
+Higienizar cozinha
+Limpar ar-condicionado
+Repor papel higiênico';
+COMMENT ON COLUMN apps.checklist_item_modelo.area IS 'banheiro, cozinha, quarto';
+
+
+CREATE TABLE apps.usuario (
+                id INTEGER NOT NULL,
+                nome VARCHAR NOT NULL,
+                email VARCHAR NOT NULL,
+                login VARCHAR NOT NULL,
+                senha_hash VARCHAR NOT NULL,
+                perfil VARCHAR NOT NULL,
+                status VARCHAR NOT NULL,
+                data_cadastro TIMESTAMP NOT NULL,
+                ultimo_acesso TIMESTAMP NOT NULL,
+                CONSTRAINT usuario PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.usuario IS 'Para controle de acesso ao sistema.';
+COMMENT ON COLUMN apps.usuario.perfil IS 'admin, recepcao, financeiro, manutencao';
+
+
+CREATE SEQUENCE apps.cliente_id_seq;
+
+CREATE TABLE apps.cliente (
+                id INTEGER NOT NULL DEFAULT nextval('apps.cliente_id_seq'),
+                nome_completo VARCHAR NOT NULL,
+                cpf VARCHAR NOT NULL,
+                rg VARCHAR NOT NULL,
+                documento_estrangeiro VARCHAR NOT NULL,
+                data_nascimento DATE NOT NULL,
+                telefone VARCHAR NOT NULL,
+                celular VARCHAR NOT NULL,
+                email VARCHAR NOT NULL,
+                logradouro VARCHAR NOT NULL,
+                numero VARCHAR NOT NULL,
+                complemento VARCHAR NOT NULL,
+                _bairro VARCHAR NOT NULL,
+                cidade VARCHAR NOT NULL,
+                estado VARCHAR NOT NULL,
+                cep VARCHAR NOT NULL,
+                pais VARCHAR NOT NULL,
+                observacao VARCHAR NOT NULL,
+                data_cadastro VARCHAR NOT NULL,
+                CONSTRAINT cliente PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.cliente IS 'Cadastro dos hóspedes/responsáveis pela reserva.
+
+Objetivo: manter histórico de clientes e reservas.';
+
+
+ALTER SEQUENCE apps.cliente_id_seq OWNED BY apps.cliente.id;
+
+CREATE SEQUENCE apps.comodidade_id_seq;
+
+CREATE TABLE apps.comodidade (
+                id INTEGER NOT NULL DEFAULT nextval('apps.comodidade_id_seq'),
+                status INTEGER NOT NULL,
+                nome VARCHAR NOT NULL,
+                descricao VARCHAR NOT NULL,
+                CONSTRAINT comodidade PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.comodidade IS 'Lista padronizada de comodidades.
+
+Objetivo: evitar repetir texto em cada chalé.';
+COMMENT ON COLUMN apps.comodidade.status IS 'ativo, inativo e manutencao';
+COMMENT ON COLUMN apps.comodidade.nome IS 'Wi-Fi, Ar-condicionado, TV, Frigobar, Cozinha, Churrasqueira';
+
+
+ALTER SEQUENCE apps.comodidade_id_seq OWNED BY apps.comodidade.id;
+
+CREATE SEQUENCE apps.chale_id_seq;
+
+CREATE TABLE apps.chale (
+                id INTEGER NOT NULL DEFAULT nextval('apps.chale_id_seq'),
+                codigo VARCHAR NOT NULL,
+                descricao VARCHAR NOT NULL,
+                nome VARCHAR NOT NULL,
+                capacidade_maxima INTEGER NOT NULL,
+                qtd_quartos INTEGER NOT NULL,
+                qtd_banheiros INTEGER NOT NULL,
+                qtd_camas_casal INTEGER NOT NULL,
+                qtd_camas_solteiro VARCHAR NOT NULL,
+                valor_diaria_base NUMERIC NOT NULL,
+                status INTEGER NOT NULL,
+                area_m2 NUMERIC NOT NULL,
+                localizacao_interna VARCHAR NOT NULL,
+                checkin_padrao TIME NOT NULL,
+                checkout_padrao TIME NOT NULL,
+                data_cadastro DATE NOT NULL,
+                data_atualizacao DATE NOT NULL,
+                CONSTRAINT chale PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.chale IS 'Tabela principal de cadastro dos chalés.
+
+Objetivo: armazenar os dados fixos de cada chalé.';
+COMMENT ON COLUMN apps.chale.status IS 'ativo, inativo e manutencao';
+
+
+ALTER SEQUENCE apps.chale_id_seq OWNED BY apps.chale.id;
+
+CREATE TABLE apps.tarifa_periodo (
+                id INTEGER NOT NULL,
+                id_chale INTEGER NOT NULL,
+                descricao VARCHAR NOT NULL,
+                data_inicio TIMESTAMP NOT NULL,
+                data_fim TIMESTAMP NOT NULL,
+                valor_diaria NUMERIC NOT NULL,
+                minimo_noites INTEGER NOT NULL,
+                tipo_periodo VARCHAR NOT NULL,
+                status VARCHAR NOT NULL,
+                CONSTRAINT tarifa_periodo PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.tarifa_periodo IS 'Para trabalhar sazonalidade.
+
+Objetivo: não depender apenas do valor base do chalé.';
+COMMENT ON COLUMN apps.tarifa_periodo.tipo_periodo IS 'baixa, alta, feriado, réveillon, carnaval';
+
+
+CREATE TABLE apps.manutencao (
+                id INTEGER NOT NULL,
+                id_chale INTEGER NOT NULL,
+                tipo_manutencao VARCHAR NOT NULL,
+                descricao_problema VARCHAR NOT NULL,
+                data_abertura TIMESTAMP NOT NULL,
+                data_inicio TIMESTAMP NOT NULL,
+                data_fim TIMESTAMP NOT NULL,
+                status VARCHAR NOT NULL,
+                responsavel VARCHAR NOT NULL,
+                fornecedor VARCHAR NOT NULL,
+                custo NUMERIC NOT NULL,
+                observacao VARCHAR NOT NULL,
+                CONSTRAINT manutencao PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.manutencao IS 'Controle operacional e histórico técnico.
+
+Objetivo: manter rastreabilidade de problemas e custos.';
+COMMENT ON COLUMN apps.manutencao.tipo_manutencao IS 'preventiva, corretiva, limpeza, inspescao';
+COMMENT ON COLUMN apps.manutencao.status IS 'aberta, em_andamento, concluida, cancelada';
+
+
+CREATE TABLE apps.checklist_limpeza (
+                id INTEGER NOT NULL,
+                id_manutencao INTEGER NOT NULL,
+                data_inicio TIMESTAMP NOT NULL,
+                data_fim TIMESTAMP NOT NULL,
+                status VARCHAR NOT NULL,
+                id_usuario INTEGER NOT NULL,
+                observacao VARCHAR NOT NULL,
+                CONSTRAINT checklist_limpeza PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.checklist_limpeza IS 'Essa tabela representa o checklist aplicado em uma limpeza específica (instância da execução).';
+
+
+CREATE TABLE apps.checklist_limpeza_item (
+                id INTEGER NOT NULL,
+                id_checklist INTEGER NOT NULL,
+                id_item_modelo INTEGER NOT NULL,
+                descricao VARCHAR NOT NULL,
+                status_item VARCHAR NOT NULL,
+                data_execucao TIMESTAMP NOT NULL,
+                id_usuario INTEGER NOT NULL,
+                observacao VARCHAR NOT NULL,
+                CONSTRAINT checklist_limpeza_item PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.checklist_limpeza_item IS 'Instância real executada na limpeza.';
+
+
+CREATE TABLE apps.bloqueio_disponibildiade (
+                id INTEGER NOT NULL,
+                id_chale INTEGER NOT NULL,
+                data_inicio TIMESTAMP NOT NULL,
+                data_fim TIMESTAMP NOT NULL,
+                motivo VARCHAR NOT NULL,
+                status VARCHAR NOT NULL,
+                observacao VARCHAR NOT NULL,
+                CONSTRAINT bloqueio_disponibildiade PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.bloqueio_disponibildiade IS 'Serve para travar um chalé por manutenção, uso interno ou outro motivo.
+
+Objetivo: separar reserva de indisponibilidade operacional.';
+COMMENT ON COLUMN apps.bloqueio_disponibildiade.motivo IS 'manutenção, dedetização, uso proprietário, reforma';
+
+
+CREATE TABLE apps.reserva (
+                id INTEGER NOT NULL,
+                id_chale INTEGER NOT NULL,
+                id_cliente INTEGER NOT NULL,
+                data_reserva DATE NOT NULL,
+                data_checkin_previsto DATE NOT NULL,
+                data_checkout_previsto DATE NOT NULL,
+                data_checkin_real DATE NOT NULL,
+                data_checkout_real DATE NOT NULL,
+                qtd_adultos INTEGER NOT NULL,
+                qtd_criancas INTEGER NOT NULL,
+                qtd_hospedes INTEGER NOT NULL,
+                qtd_noites INTEGER NOT NULL,
+                valor_diaria_aplicada NUMERIC NOT NULL,
+                valor_total_hospedagem NUMERIC NOT NULL,
+                valor_desconto NUMERIC,
+                valor_taxa_limpeza NUMERIC,
+                valor_taxa_extra NUMERIC,
+                valor_total_reserva NUMERIC NOT NULL,
+                status_reserva VARCHAR NOT NULL,
+                origem_reserva VARCHAR NOT NULL,
+                observacao VARCHAR NOT NULL,
+                CONSTRAINT reserva PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.reserva IS 'É a tabela mais importante da operação.
+
+Objetivo: controlar a ocupação e o histórico financeiro/comercial.';
+COMMENT ON COLUMN apps.reserva.valor_total_reserva IS 'valor_total_reserva = (valor_diaria_aplicada * qtd_noites)
++ valor_taxa_limpeza
++ valor_taxa_extra
+- valor_desconto';
+COMMENT ON COLUMN apps.reserva.status_reserva IS 'pendente, confirmada, hospedado, finalizada, cancelada, no_show';
+COMMENT ON COLUMN apps.reserva.origem_reserva IS 'direto, WhatsApp, Booking, Airbnb, site';
+
+
+CREATE TABLE apps.consumo_extra (
+                id INTEGER NOT NULL,
+                id_reserva INTEGER NOT NULL,
+                descricao VARCHAR NOT NULL,
+                quantidade VARCHAR NOT NULL,
+                valor_unitario NUMERIC NOT NULL,
+                valor_total NUMERIC NOT NULL,
+                data_lancamento TIMESTAMP NOT NULL,
+                status_cobranca VARCHAR NOT NULL,
+                CONSTRAINT consumo_extra PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.consumo_extra IS 'Para itens cobrados fora da diária.
+
+Objetivo: consolidar cobranças adicionais.';
+COMMENT ON COLUMN apps.consumo_extra.descricao IS 'água extra, minibar, churrasqueira, lavanderia';
+
+
+CREATE TABLE apps.hospede (
+                id INTEGER NOT NULL,
+                id_reserva INTEGER NOT NULL,
+                nome VARCHAR NOT NULL,
+                cpf VARCHAR NOT NULL,
+                data_nascimento DATE NOT NULL,
+                telefone VARCHAR NOT NULL,
+                tipo_hospede VARCHAR NOT NULL,
+                observacao VARCHAR NOT NULL,
+                CONSTRAINT hospede PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.hospede IS 'Caso você queira registrar todos os ocupantes, não só o responsável.
+
+Objetivo: útil para controle de hospedagem e segurança.';
+COMMENT ON COLUMN apps.hospede.tipo_hospede IS 'titular, acompanhante, criança';
+
+
+CREATE TABLE apps.pagamento (
+                id INTEGER NOT NULL,
+                id_reserva INTEGER NOT NULL,
+                data_pagamento TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                valor_pago NUMERIC NOT NULL,
+                forma_pagamento VARCHAR NOT NULL,
+                status_pagamento VARCHAR NOT NULL,
+                tipo_pagamento VARCHAR,
+                codigo_transacao VARCHAR,
+                observacao VARCHAR NOT NULL,
+                CONSTRAINT pagamento PRIMARY KEY (id)
+);
+COMMENT ON TABLE apps.pagamento IS 'Permite múltiplos pagamentos por reserva.';
+COMMENT ON COLUMN apps.pagamento.forma_pagamento IS 'pix, cartão, dinheiro, boleto, transferência';
+COMMENT ON COLUMN apps.pagamento.status_pagamento IS 'pendente, pago, estornado, parcial';
+COMMENT ON COLUMN apps.pagamento.tipo_pagamento IS 'sinal, restante, caução, taxa extra';
+
+
+CREATE TABLE apps.chale_comodidade (
+                id_chale INTEGER NOT NULL,
+                id_comodidade INTEGER NOT NULL,
+                observacao VARCHAR NOT NULL,
+                CONSTRAINT chale_comodidade PRIMARY KEY (id_chale, id_comodidade)
+);
+COMMENT ON TABLE apps.chale_comodidade IS 'Tabela associativa entre chalé e comodidade.';
+
+
+ALTER TABLE apps.checklist_limpeza_item ADD CONSTRAINT checklist_item_modelo_checklist_limpeza_item_fk
+FOREIGN KEY (id_item_modelo)
+REFERENCES apps.checklist_item_modelo (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.checklist_limpeza ADD CONSTRAINT usuario_checklist_limpeza_fk
+FOREIGN KEY (id)
+REFERENCES apps.usuario (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.checklist_limpeza_item ADD CONSTRAINT usuario_checklist_limpeza_item_fk
+FOREIGN KEY (id_usuario)
+REFERENCES apps.usuario (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.reserva ADD CONSTRAINT clientes_reserva_fk
+FOREIGN KEY (id_cliente)
+REFERENCES apps.cliente (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.chale_comodidade ADD CONSTRAINT comodidades_chale_comodidade_fk
+FOREIGN KEY (id_comodidade)
+REFERENCES apps.comodidade (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.chale_comodidade ADD CONSTRAINT chale_chale_comodidade_fk
+FOREIGN KEY (id_chale)
+REFERENCES apps.chale (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.reserva ADD CONSTRAINT chale_reserva_fk
+FOREIGN KEY (id_chale)
+REFERENCES apps.chale (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.reserva ADD CONSTRAINT chale_reserva_fk1
+FOREIGN KEY (id_chale)
+REFERENCES apps.chale (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.bloqueio_disponibildiade ADD CONSTRAINT chale_bloqueio_disponibildiade_fk
+FOREIGN KEY (id_chale)
+REFERENCES apps.chale (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.manutencao ADD CONSTRAINT chale_manutencao_fk
+FOREIGN KEY (id_chale)
+REFERENCES apps.chale (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.tarifa_periodo ADD CONSTRAINT chale_tarifa_periodo_fk
+FOREIGN KEY (id_chale)
+REFERENCES apps.chale (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.checklist_limpeza ADD CONSTRAINT manutencao_checklist_limpeza_fk
+FOREIGN KEY (id_manutencao)
+REFERENCES apps.manutencao (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.checklist_limpeza_item ADD CONSTRAINT checklist_limpeza_checklist_limpeza_item_fk
+FOREIGN KEY (id_checklist)
+REFERENCES apps.checklist_limpeza (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.pagamento ADD CONSTRAINT reserva_pagamento_fk
+FOREIGN KEY (id_reserva)
+REFERENCES apps.reserva (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.hospede ADD CONSTRAINT reserva_hospede_fk
+FOREIGN KEY (id_reserva)
+REFERENCES apps.reserva (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;
+
+ALTER TABLE apps.consumo_extra ADD CONSTRAINT reserva_consumo_extra_fk
+FOREIGN KEY (id_reserva)
+REFERENCES apps.reserva (id)
+ON DELETE NO ACTION
+ON UPDATE NO ACTION
+NOT DEFERRABLE;

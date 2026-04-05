@@ -1,0 +1,34 @@
+name: Bug report
+description: Reporte um problema que precisa ser investigado.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Resumo
+      description: Descreva o comportamento observado e o esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      description: Liste o caminho mais curto para reproduzir.
+      placeholder: |
+        1. Ir para...
+        2. Clicar em...
+        3. Ver erro...
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidências
+      description: Logs, prints ou payloads que ajudem na análise.
+  - type: input
+    id: environment
+    attributes:
+      label: Ambiente
+      description: Exemplo: local, homologacao, producao.

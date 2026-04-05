@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["apps"]
+}
+
+model Usuario {
+  id            Int       @id @default(autoincrement())
+  nome          String
+  email         String    @unique
+  login         String    @unique
+  senhaHash     String    @map("senha_hash")
+  perfil        String
+  status        String
+  dataCadastro  DateTime  @default(now()) @map("data_cadastro")
+  ultimoAcesso  DateTime? @map("ultimo_acesso")
+  checklists    ChecklistLimpeza[]
+  checklistItens ChecklistLimpezaItem[]
+
+  @@map("usuario")
+  @@schema("apps")
+}
+
+model Cliente {
+  id                    Int       @id @default(autoincrement())
+  nomeCompleto          String    @map("nome_completo")
+  cpf                   String    @unique
+  rg                    String?
+  documentoEstrangeiro  String?   @map("documento_estrangeiro")
+  dataNascimento        DateTime? @map("data_nascimento") @db.Date
+  telefone              String?
+  celular               String?
+  email                 String?
+  logradouro            String?
+  numero                String?
+  complemento           String?
+  bairro                String?   @map("_bairro")
+  cidade                String?
+  status                String?
+  estado                String?
+  cep                   String?
+  pais                  String?
+  observacao            String?
+  dataCadastro          DateTime  @default(now()) @map("data_cadastro")
+  reservas              Reserva[]
+
+  @@map("cliente")
+  @@schema("apps")
+}
+
+model Comodidade {
+  id          Int               @id @default(autoincrement())
+  status      String
+  nome        String
+  descricao   String
+  chales      ChaleComodidade[]
+
+  @@map("comodidade")
+  @@schema("apps")
+}
+
+model Chale {
+  id                Int                       @id @default(autoincrement())
+  codigo            String                    @unique
+  descricao         String
+  nome              String
+  capacidadeMaxima  Int                       @map("capacidade_maxima")
+  qtdQuartos        Int                       @map("qtd_quartos")
+  qtdBanheiros      Int                       @map("qtd_banheiros")
+  qtdCamasCasal     Int                       @map("qtd_camas_casal")
+  qtdCamasSolteiro  Int                       @map("qtd_camas_solteiro")
+  valorDiariaBase   Decimal                   @map("valor_diaria_base") @db.Decimal(10, 2)
+  status            String
+  areaM2            Decimal                   @map("area_m2") @db.Decimal(10, 2)
+  localizacaoInterna String                   @map("localizacao_interna")
+  checkinPadrao     DateTime                  @map("checkin_padrao") @db.Time(0)
+  checkoutPadrao    DateTime                  @map("checkout_padrao") @db.Time(0)
+  dataCadastro      DateTime                  @default(now()) @map("data_cadastro") @db.Date
+  dataAtualizacao   DateTime                  @updatedAt @map("data_atualizacao") @db.Date
+  comodidades       ChaleComodidade[]
+  reservas          Reserva[]
+  manutencoes       Manutencao[]
+  bloqueios         BloqueioDisponibilidade[]
+  tarifas           TarifaPeriodo[]
+
+  @@map("chale")
+  @@schema("apps")
+}
+
+model TarifaPeriodo {
+  id            Int      @id @default(autoincrement())
+  idChale       Int      @map("id_chale")
+  descricao     String
+  dataInicio    DateTime @map("data_inicio")
+  dataFim       DateTime @map("data_fim")
+  valorDiaria   Decimal  @map("valor_diaria") @db.Decimal(10, 2)
+  minimoNoites  Int      @map("minimo_noites")
+  tipoPeriodo   String   @map("tipo_periodo")
+  status        String
+  chale         Chale    @relation(fields: [idChale], references: [id])
+
+  @@map("tarifa_periodo")
+  @@schema("apps")
+}
+
+model Manutencao {
+  id                 Int                @id @default(autoincrement())
+  idChale            Int                @map("id_chale")
+  tipoManutencao     String             @map("tipo_manutencao")
+  descricaoProblema  String             @map("descricao_problema")
+  dataAbertura       DateTime           @map("data_abertura")
+  dataInicio         DateTime?          @map("data_inicio")
+  dataFim            DateTime?          @map("data_fim")
+  status             String
+  responsavel        String?
+  fornecedor         String?
+  custo              Decimal?           @db.Decimal(10, 2)
+  observacao         String?
+  chale              Chale              @relation(fields: [idChale], references: [id])
+  checklists         ChecklistLimpeza[]
+
+  @@map("manutencao")
+  @@schema("apps")
+}
+
+model ChecklistItemModelo {
+  id            Int                     @id @default(autoincrement())
+  descricao     String
+  area          String
+  obrigatorio   Boolean
+  ordem         Int
+  status        String
+  checklistItens ChecklistLimpezaItem[]
+
+  @@map("checklist_item_modelo")
+  @@schema("apps")
+}
+
+model ChecklistLimpeza {
+  id            Int                    @id @default(autoincrement())
+  idManutencao  Int                    @map("id_manutencao")
+  dataInicio    DateTime               @map("data_inicio")
+  dataFim       DateTime?              @map("data_fim")
+  status        String
+  idUsuario     Int                    @map("id_usuario")
+  observacao    String?
+  manutencao    Manutencao             @relation(fields: [idManutencao], references: [id])
+  usuario       Usuario                @relation(fields: [idUsuario], references: [id])
+  itens         ChecklistLimpezaItem[]
+
+  @@map("checklist_limpeza")
+  @@schema("apps")
+}
+
+model ChecklistLimpezaItem {
+  id             Int                  @id @default(autoincrement())
+  idChecklist    Int                  @map("id_checklist")
+  idItemModelo   Int                  @map("id_item_modelo")
+  descricao      String
+  statusItem     String               @map("status_item")
+  dataExecucao   DateTime             @map("data_execucao")
+  idUsuario      Int                  @map("id_usuario")
+  observacao     String?
+  checklist      ChecklistLimpeza     @relation(fields: [idChecklist], references: [id])
+  itemModelo     ChecklistItemModelo  @relation(fields: [idItemModelo], references: [id])
+  usuario        Usuario              @relation(fields: [idUsuario], references: [id])
+
+  @@map("checklist_limpeza_item")
+  @@schema("apps")
+}
+
+model BloqueioDisponibilidade {
+  id          Int      @id @default(autoincrement())
+  idChale     Int      @map("id_chale")
+  dataInicio  DateTime @map("data_inicio")
+  dataFim     DateTime @map("data_fim")
+  motivo      String
+  status      String
+  observacao  String?
+  chale       Chale    @relation(fields: [idChale], references: [id])
+
+  @@map("bloqueio_disponibildiade")
+  @@schema("apps")
+}
+
+model Reserva {
+  id                    Int             @id @default(autoincrement())
+  idChale               Int             @map("id_chale")
+  idCliente             Int             @map("id_cliente")
+  dataReserva           DateTime        @default(now()) @map("data_reserva") @db.Date
+  dataCheckinPrevisto   DateTime        @map("data_checkin_previsto") @db.Date
+  dataCheckoutPrevisto  DateTime        @map("data_checkout_previsto") @db.Date
+  dataCheckinReal       DateTime?       @map("data_checkin_real") @db.Date
+  dataCheckoutReal      DateTime?       @map("data_checkout_real") @db.Date
+  qtdAdultos            Int             @map("qtd_adultos")
+  qtdCriancas           Int             @map("qtd_criancas")
+  qtdHospedes           Int             @map("qtd_hospedes")
+  qtdNoites             Int             @map("qtd_noites")
+  valorDiariaAplicada   Decimal         @map("valor_diaria_aplicada") @db.Decimal(10, 2)
+  valorTotalHospedagem  Decimal         @map("valor_total_hospedagem") @db.Decimal(10, 2)
+  valorDesconto         Decimal?        @map("valor_desconto") @db.Decimal(10, 2)
+  valorTaxaLimpeza      Decimal?        @map("valor_taxa_limpeza") @db.Decimal(10, 2)
+  valorTaxaExtra        Decimal?        @map("valor_taxa_extra") @db.Decimal(10, 2)
+  valorTotalReserva     Decimal         @map("valor_total_reserva") @db.Decimal(10, 2)
+  statusReserva         String          @map("status_reserva")
+  origemReserva         String          @map("origem_reserva")
+  observacao            String?
+  chale                 Chale           @relation(fields: [idChale], references: [id])
+  cliente               Cliente         @relation(fields: [idCliente], references: [id])
+  consumos              ConsumoExtra[]
+  hospedes              Hospede[]
+  pagamentos            Pagamento[]
+
+  @@map("reserva")
+  @@schema("apps")
+}
+
+model ConsumoExtra {
+  id             Int      @id @default(autoincrement())
+  idReserva      Int      @map("id_reserva")
+  descricao      String
+  quantidade     Int
+  valorUnitario  Decimal  @map("valor_unitario") @db.Decimal(10, 2)
+  valorTotal     Decimal  @map("valor_total") @db.Decimal(10, 2)
+  dataLancamento DateTime @default(now()) @map("data_lancamento")
+  statusCobranca String   @map("status_cobranca")
+  reserva        Reserva  @relation(fields: [idReserva], references: [id])
+
+  @@map("consumo_extra")
+  @@schema("apps")
+}
+
+model Hospede {
+  id             Int       @id @default(autoincrement())
+  idReserva      Int       @map("id_reserva")
+  nome           String
+  cpf            String?
+  dataNascimento DateTime? @map("data_nascimento") @db.Date
+  telefone       String?
+  tipoHospede    String    @map("tipo_hospede")
+  observacao     String?
+  reserva        Reserva   @relation(fields: [idReserva], references: [id])
+
+  @@map("hospede")
+  @@schema("apps")
+}
+
+model Pagamento {
+  id              Int      @id @default(autoincrement())
+  idReserva       Int      @map("id_reserva")
+  dataPagamento   DateTime @default(now()) @map("data_pagamento")
+  valorPago       Decimal  @map("valor_pago") @db.Decimal(10, 2)
+  formaPagamento  String   @map("forma_pagamento")
+  statusPagamento String   @map("status_pagamento")
+  tipoPagamento   String?  @map("tipo_pagamento")
+  codigoTransacao String?  @map("codigo_transacao")
+  observacao      String?
+  reserva         Reserva  @relation(fields: [idReserva], references: [id])
+
+  @@map("pagamento")
+  @@schema("apps")
+}
+
+model ChaleComodidade {
+  idChale       Int
+  idComodidade  Int
+  observacao    String?
+  chale         Chale      @relation(fields: [idChale], references: [id])
+  comodidade    Comodidade @relation(fields: [idComodidade], references: [id])
+
+  @@id([idChale, idComodidade])
+  @@map("chale_comodidade")
+  @@schema("apps")
+}
