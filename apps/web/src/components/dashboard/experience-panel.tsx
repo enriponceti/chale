@@ -44,30 +44,36 @@ export function ExperiencePanel() {
   return (
     <Card
       sx={{
-        background:
-          "linear-gradient(135deg, rgba(15,107,99,0.95) 0%, rgba(10,79,73,0.98) 100%)",
-        color: "white"
+        borderTop: "3px solid",
+        borderTopColor: "warning.main"
       }}
     >
-      <CardContent>
+      <CardContent sx={{ p: 0 }}>
         <Stack spacing={3}>
-          <Box>
-            <Typography variant="overline" sx={{ opacity: 0.72 }}>
-              Centro de operacao
+          <Box sx={{ px: 2.5, pt: 2.25 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: "0.08em" }}>
+              CENTRO DE OPERACAO
             </Typography>
-            <Typography variant="h5" sx={{ mt: 1 }}>
+            <Typography variant="h6" sx={{ mt: 0.75, fontWeight: 600 }}>
               Visao consolidada da hospedagem, limpeza e faturamento
             </Typography>
           </Box>
 
-          <Stack spacing={2.5}>
+          <Stack spacing={0}>
             {items.map((item) => (
-              <Box key={item.title}>
-                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+              <Box
+                key={item.title}
+                sx={{
+                  px: 2.5,
+                  py: 1.75,
+                  borderTop: "1px solid #edf0f2"
+                }}
+              >
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.25 }}>
                   {item.icon}
                   <Box>
-                    <Typography fontWeight={700}>{item.title}</Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.78 }}>
+                    <Typography fontWeight={600}>{item.title}</Typography>
+                    <Typography variant="body2" color="text.secondary">
                       {item.value}
                     </Typography>
                   </Box>
@@ -76,12 +82,12 @@ export function ExperiencePanel() {
                   variant="determinate"
                   value={item.progress}
                   sx={{
-                    height: 10,
+                    height: 8,
                     borderRadius: 99,
-                    bgcolor: "rgba(255,255,255,0.15)",
+                    bgcolor: "#e9ecef",
                     "& .MuiLinearProgress-bar": {
                       borderRadius: 99,
-                      bgcolor: "#F6B253"
+                      bgcolor: item.progress > 70 ? "#00a65a" : item.progress > 45 ? "#3c8dbc" : "#f39c12"
                     }
                   }}
                 />

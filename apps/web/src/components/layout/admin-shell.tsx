@@ -1,10 +1,11 @@
 "use client";
 
+import AppsRoundedIcon from "@mui/icons-material/AppsRounded";
 import BookOnlineRoundedIcon from "@mui/icons-material/BookOnlineRounded";
 import CabinRoundedIcon from "@mui/icons-material/CabinRounded";
+import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CottageOutlinedIcon from "@mui/icons-material/CottageOutlined";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
-import AppsRoundedIcon from "@mui/icons-material/AppsRounded";
 import HandymanRoundedIcon from "@mui/icons-material/HandymanRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
@@ -14,33 +15,33 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import WalletRoundedIcon from "@mui/icons-material/WalletRounded";
 import {
   Avatar,
+  Badge,
   Box,
-  Button,
   Chip,
+  Divider,
   Drawer,
   IconButton,
   InputAdornment,
   List,
+  ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Paper,
   Stack,
   TextField,
-  Tooltip,
   Typography
 } from "@mui/material";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useMemo, useState } from "react";
-import { useAuth } from "../auth/auth-provider";
 import { sidebarItems } from "../../lib/data";
+import { useAuth } from "../auth/auth-provider";
 
 type Props = {
   children: ReactNode;
 };
 
-const drawerWidth = 280;
+const drawerWidth = 260;
 
 const itemIcons: Record<string, ReactNode> = {
   "/": <DashboardRoundedIcon fontSize="small" />,
@@ -49,39 +50,191 @@ const itemIcons: Record<string, ReactNode> = {
   "/comodidades": <AppsRoundedIcon fontSize="small" />,
   "/clientes": <PeopleAltRoundedIcon fontSize="small" />,
   "/manutencao": <HandymanRoundedIcon fontSize="small" />,
+  "/checklists": <ChecklistRoundedIcon fontSize="small" />,
   "/financeiro": <WalletRoundedIcon fontSize="small" />
 };
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
   "/": {
-    title: "Dashboard operacional",
-    subtitle: "Visao consolidada de reservas, ocupacao e rotina do empreendimento."
+    title: "Dashboard",
+    subtitle: "Painel geral da operacao"
   },
   "/reservas": {
-    title: "Gestao de reservas",
-    subtitle: "Acompanhe entradas, saidas, disponibilidade e status de confirmacao."
+    title: "Reservas",
+    subtitle: "Controle de entradas, saidas e ocupacao"
   },
   "/chales": {
-    title: "Cadastro de chales",
-    subtitle: "Mantenha inventario, capacidade, configuracao e precificacao sempre coerentes."
+    title: "Chales",
+    subtitle: "Cadastro, estrutura e precificacao"
   },
   "/clientes": {
-    title: "Base de clientes",
-    subtitle: "Centralize contatos, relacionamento e historico comercial dos hospedes."
+    title: "Clientes",
+    subtitle: "Base de hospedes e relacionamento"
   },
   "/comodidades": {
-    title: "Cadastro de comodidades",
-    subtitle: "Gerencie os itens que compoem a estrutura e os diferenciais dos chales."
+    title: "Comodidades",
+    subtitle: "Inventario de itens vinculados aos chales"
   },
   "/manutencao": {
-    title: "Operacao tecnica",
-    subtitle: "Controle manutencoes, pendencias de unidade e impacto na disponibilidade."
+    title: "Manutencao",
+    subtitle: "Chamados tecnicos e disponibilidade"
+  },
+  "/checklists": {
+    title: "Checklists",
+    subtitle: "Modelos e execucao de checklists operacionais"
   },
   "/financeiro": {
-    title: "Painel financeiro",
-    subtitle: "Monitore receita, pagamentos e indicadores de faturamento da hospedagem."
+    title: "Financeiro",
+    subtitle: "Receita, pagamentos e indicadores"
   }
 };
+
+function SidebarContent({
+  pathname,
+  userName,
+  onClose
+}: {
+  pathname: string;
+  userName: string;
+  onClose?: () => void;
+}) {
+  return (
+    <Stack sx={{ height: "100%" }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        alignItems="center"
+        sx={{
+          px: 2,
+          py: 2,
+          minHeight: 64,
+          borderBottom: "1px solid rgba(255,255,255,0.08)"
+        }}
+      >
+        <Box
+          sx={{
+            width: 34,
+            height: 34,
+            display: "grid",
+            placeItems: "center",
+            borderRadius: 1.5,
+            bgcolor: "rgba(255,255,255,0.12)"
+          }}
+        >
+          <CottageOutlinedIcon fontSize="small" />
+        </Box>
+        <Box>
+          <Typography fontWeight={700} fontSize="1.1rem">
+            Serra AdminLTE
+          </Typography>
+          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.65)" }}>
+            Hospedagem e operacao
+          </Typography>
+        </Box>
+      </Stack>
+
+      <Stack
+        direction="row"
+        spacing={1.5}
+        alignItems="center"
+        sx={{
+          px: 2,
+          py: 1.5,
+          borderBottom: "1px solid rgba(255,255,255,0.08)"
+        }}
+      >
+        <Avatar sx={{ width: 34, height: 34, bgcolor: "#5a6268", fontSize: "0.95rem" }}>
+          {userName.slice(0, 1).toUpperCase()}
+        </Avatar>
+        <Box>
+          <Typography fontWeight={600} fontSize="0.95rem">
+            {userName}
+          </Typography>
+          <Typography variant="caption" sx={{ color: "#00a65a" }}>
+            Online
+          </Typography>
+        </Box>
+      </Stack>
+
+      <Box sx={{ px: 2, py: 1.5 }}>
+        <TextField
+          size="small"
+          placeholder="Buscar"
+          fullWidth
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchRoundedIcon sx={{ color: "rgba(255,255,255,0.55)", fontSize: 18 }} />
+              </InputAdornment>
+            )
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              bgcolor: "rgba(255,255,255,0.08)",
+              color: "white",
+              "& fieldset": {
+                borderColor: "rgba(255,255,255,0.08)"
+              }
+            },
+            "& .MuiInputBase-input::placeholder": {
+              color: "rgba(255,255,255,0.55)",
+              opacity: 1
+            }
+          }}
+        />
+      </Box>
+
+      <Typography
+        variant="caption"
+        sx={{ px: 2, pb: 1, color: "rgba(255,255,255,0.4)", letterSpacing: "0.08em" }}
+      >
+        MENU PRINCIPAL
+      </Typography>
+
+      <List disablePadding sx={{ px: 1.5, display: "grid", gap: 0.5 }}>
+        {sidebarItems.map((item) => {
+          const active = pathname === item.href;
+
+          return (
+            <ListItem key={item.href} disablePadding sx={{ display: "block" }}>
+              <ListItemButton
+                component={Link}
+                href={item.href}
+                onClick={onClose}
+                sx={{
+                  minHeight: 42,
+                  px: 1.5,
+                  borderRadius: 1,
+                  color: active ? "white" : "rgba(255,255,255,0.82)",
+                  bgcolor: active ? "var(--adminlte-sidebar-active)" : "transparent",
+                  "&:hover": {
+                    bgcolor: active ? "var(--adminlte-sidebar-active)" : "var(--adminlte-sidebar-hover)"
+                  }
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 34,
+                    color: "inherit"
+                  }}
+                >
+                  {itemIcons[item.href]}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{
+                    fontWeight: active ? 600 : 400,
+                    fontSize: "0.96rem"
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
+      </List>
+    </Stack>
+  );
+}
 
 export function AdminShell({ children }: Props) {
   const pathname = usePathname();
@@ -89,27 +242,13 @@ export function AdminShell({ children }: Props) {
   const { logout, session } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const userName = session?.user.nome ?? "Admin";
-  const initials = userName
-    .split(" ")
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .slice(0, 2)
-    .join("");
   const currentPage = useMemo(
     () =>
       pageMeta[pathname] ?? {
         title: "Painel administrativo",
-        subtitle: "Gerencie a operacao diaria do sistema."
+        subtitle: "Gerencie a operacao diaria do sistema"
       },
     [pathname]
-  );
-  const formattedDate = useMemo(
-    () =>
-      new Intl.DateTimeFormat("pt-BR", {
-        weekday: "short",
-        day: "2-digit",
-        month: "short"
-      }).format(new Date()),
-    []
   );
 
   function handleLogout() {
@@ -117,146 +256,8 @@ export function AdminShell({ children }: Props) {
     router.replace("/login");
   }
 
-  const drawerContent = (
-    <Stack
-      spacing={3}
-      sx={{
-        height: "100%",
-        p: 2
-      }}
-    >
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2,
-          borderRadius: 4,
-          color: "common.white",
-          background:
-            "linear-gradient(160deg, rgba(14,46,56,1) 0%, rgba(16,88,98,1) 54%, rgba(205,125,38,1) 100%)"
-        }}
-      >
-        <Stack spacing={1.5}>
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <Box
-              sx={{
-                width: 42,
-                height: 42,
-                display: "grid",
-                placeItems: "center",
-                borderRadius: 3,
-                backgroundColor: "rgba(255,255,255,0.16)"
-              }}
-            >
-              <CottageOutlinedIcon />
-            </Box>
-            <Box>
-              <Typography variant="h6" fontWeight={800}>
-                Serra Admin
-              </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.82 }}>
-                Hospedagem e operacao
-              </Typography>
-            </Box>
-          </Stack>
-          <Box
-            sx={{
-              p: 1.5,
-              borderRadius: 3,
-              backgroundColor: "rgba(255,255,255,0.1)"
-            }}
-          >
-            <Typography variant="caption" sx={{ opacity: 0.76, letterSpacing: "0.08em" }}>
-              AMBIENTE
-            </Typography>
-            <Typography fontWeight={700}>Painel administrativo principal</Typography>
-          </Box>
-        </Stack>
-      </Paper>
-
-      <Box>
-        <Typography
-          variant="overline"
-          sx={{
-            px: 1.5,
-            color: "text.secondary",
-            letterSpacing: "0.12em"
-          }}
-        >
-          Navegacao
-        </Typography>
-        <List disablePadding sx={{ display: "grid", gap: 0.75, mt: 1 }}>
-          {sidebarItems.map((item) => {
-            const active = pathname === item.href;
-
-            return (
-              <ListItemButton
-                key={item.href}
-                component={Link}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                sx={{
-                  minHeight: 50,
-                  borderRadius: 3,
-                  px: 1.5,
-                  py: 1,
-                  bgcolor: active ? "rgba(15, 107, 99, 0.12)" : "transparent",
-                  color: active ? "primary.main" : "text.primary",
-                  border: active
-                    ? "1px solid rgba(15, 107, 99, 0.16)"
-                    : "1px solid transparent"
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 38,
-                    color: active ? "primary.main" : "text.secondary"
-                  }}
-                >
-                  {itemIcons[item.href]}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.label}
-                  primaryTypographyProps={{ fontWeight: active ? 800 : 600 }}
-                />
-              </ListItemButton>
-            );
-          })}
-        </List>
-      </Box>
-
-      <Paper
-        elevation={0}
-        sx={{
-          mt: "auto",
-          p: 2,
-          borderRadius: 4,
-          border: "1px solid rgba(15, 107, 99, 0.08)",
-          background:
-            "linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(248,244,237,0.94) 100%)"
-        }}
-      >
-        <Typography variant="body2" color="text.secondary">
-          Sessao ativa
-        </Typography>
-        <Typography fontWeight={800} sx={{ mt: 0.5 }}>
-          {userName}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Perfil {session?.user.perfil ?? "admin"}
-        </Typography>
-      </Paper>
-    </Stack>
-  );
-
   return (
-    <Box
-      sx={{
-        display: "flex",
-        minHeight: "100vh",
-        background:
-          "radial-gradient(circle at top left, rgba(15,107,99,0.08), transparent 20%), linear-gradient(180deg, #f7f4ee 0%, #f1ece4 100%)"
-      }}
-    >
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "background.default" }}>
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -265,13 +266,13 @@ export function AdminShell({ children }: Props) {
           display: { xs: "block", lg: "none" },
           "& .MuiDrawer-paper": {
             width: drawerWidth,
-            boxSizing: "border-box",
-            borderRight: "1px solid rgba(15, 107, 99, 0.08)",
-            backgroundColor: "#FCFAF6"
+            border: "none",
+            bgcolor: "var(--adminlte-sidebar-bg)",
+            color: "white"
           }
         }}
       >
-        {drawerContent}
+        <SidebarContent pathname={pathname} userName={userName} onClose={() => setMobileOpen(false)} />
       </Drawer>
 
       <Drawer
@@ -282,105 +283,68 @@ export function AdminShell({ children }: Props) {
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             width: drawerWidth,
-            boxSizing: "border-box",
-            borderRight: "1px solid rgba(15, 107, 99, 0.08)",
-            backgroundColor: "#FCFAF6"
+            border: "none",
+            bgcolor: "var(--adminlte-sidebar-bg)",
+            color: "white",
+            boxShadow: "2px 0 8px rgba(0,0,0,0.15)"
           }
         }}
       >
-        {drawerContent}
+        <SidebarContent pathname={pathname} userName={userName} />
       </Drawer>
 
       <Box component="main" sx={{ flexGrow: 1, minWidth: 0 }}>
-        <Stack spacing={3}>
-          <Paper
-            elevation={0}
-            sx={{
-              position: "sticky",
-              top: 0,
-              zIndex: 20,
-              mx: { xs: 2, md: 3 },
-              mt: { xs: 2, md: 3 },
-              p: { xs: 1.5, md: 2 },
-              borderRadius: 4,
-              border: "1px solid rgba(15, 107, 99, 0.08)",
-              backgroundColor: "rgba(252,250,246,0.82)",
-              backdropFilter: "blur(16px)"
-            }}
-          >
-            <Stack
-              direction={{ xs: "column", md: "row" }}
-              spacing={2}
-              justifyContent="space-between"
-              alignItems={{ xs: "stretch", md: "center" }}
+        <Box
+          sx={{
+            height: 57,
+            px: { xs: 2, md: 3 },
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            bgcolor: "var(--adminlte-topbar-bg)",
+            borderBottom: "1px solid var(--adminlte-border)",
+            boxShadow: "0 1px 2px rgba(0,0,0,0.04)"
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center">
+            <IconButton
+              onClick={() => setMobileOpen(true)}
+              sx={{ display: { xs: "inline-flex", lg: "none" } }}
             >
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <IconButton
-                  onClick={() => setMobileOpen(true)}
-                  sx={{ display: { xs: "inline-flex", lg: "none" } }}
-                >
-                  <MenuRoundedIcon />
-                </IconButton>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                    {currentPage.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {currentPage.subtitle}
-                  </Typography>
-                </Box>
-              </Stack>
+              <MenuRoundedIcon />
+            </IconButton>
+            <Typography fontWeight={600}>{currentPage.title}</Typography>
+            <Chip
+              label={currentPage.subtitle}
+              size="small"
+              sx={{
+                display: { xs: "none", md: "inline-flex" },
+                bgcolor: "#e9f3f9",
+                color: "primary.main",
+                borderRadius: 1
+              }}
+            />
+          </Stack>
 
-              <Stack direction="row" spacing={1.25} alignItems="center" flexWrap="wrap">
-                <TextField
-                  size="small"
-                  placeholder="Buscar reserva, cliente ou chale"
-                  sx={{ width: { xs: "100%", md: 320 } }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchRoundedIcon fontSize="small" />
-                      </InputAdornment>
-                    )
-                  }}
-                />
-                <Chip label={formattedDate} variant="outlined" />
-                <Chip label="Sistema online" color="success" variant="outlined" />
-                <IconButton>
-                  <NotificationsNoneRoundedIcon />
-                </IconButton>
-                <Stack direction="row" spacing={1.25} alignItems="center">
-                  <Box sx={{ display: { xs: "none", md: "block" } }}>
-                    <Typography fontWeight={700}>{userName}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {session?.user.perfil ?? "admin"}
-                    </Typography>
-                  </Box>
-                  <Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }}>{initials}</Avatar>
-                  <Tooltip title="Sair">
-                    <Button
-                      onClick={handleLogout}
-                      color="inherit"
-                      startIcon={<LogoutRoundedIcon />}
-                      sx={{ display: { xs: "none", md: "inline-flex" } }}
-                    >
-                      Sair
-                    </Button>
-                  </Tooltip>
-                </Stack>
-              </Stack>
-            </Stack>
-          </Paper>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <IconButton>
+              <Badge color="error" badgeContent={3}>
+                <NotificationsNoneRoundedIcon />
+              </Badge>
+            </IconButton>
+            <Divider orientation="vertical" flexItem />
+            <Chip
+              label={session?.user.perfil ?? "admin"}
+              size="small"
+              sx={{ bgcolor: "#f8f9fa", borderRadius: 1 }}
+            />
+            <IconButton onClick={handleLogout}>
+              <LogoutRoundedIcon />
+            </IconButton>
+          </Stack>
+        </Box>
 
-          <Box
-            sx={{
-              px: { xs: 2, md: 3 },
-              pb: { xs: 3, md: 4 }
-            }}
-          >
-            <Box sx={{ maxWidth: 1480, mx: "auto" }}>{children}</Box>
-          </Box>
-        </Stack>
+        <Box sx={{ p: { xs: 2, md: 3 } }}>{children}</Box>
       </Box>
     </Box>
   );

@@ -155,19 +155,61 @@ Ponto consolidado em 05/04/2026:
 - `npm run check` validado localmente
 - CI do GitHub validada em pull request e em `main`
 
+Atualizacao de encerramento em 05/04/2026:
+
+- corrigida a pagina interna `not-found` do Next em `apps/web/src/app/not-found.tsx`
+- corrigida a instabilidade entre `next dev` e `next build` usando `distDir` separado em desenvolvimento (`.next-dev`)
+- `apps/web/tsconfig.json` ajustado para incluir tipos gerados em `.next-dev`
+- fluxo de autenticacao do frontend ajustado para evitar tela presa em loading antes do login
+- modal de `chales` ajustado para exibir erros dentro do proprio dialog
+- modal de `chales` ajustado com mascara monetaria em Real com casas decimais
+- modal de `reservas` ajustado para exibir erros dentro do proprio dialog
+- modal de `reservas` ajustado com campos obrigatorios sinalizados e mascara monetaria em Real com casas decimais
+- `npm run check` segue passando apos as correcoes
+
+Atualizacao de encerramento em 10/04/2026:
+
+- frontend remodelado para uma linguagem visual inspirada no `AdminLTE`
+- menu lateral reorganizado com `Dashboard`, `Reservas`, `Chales`, `Comodidades`, `Clientes`, `Manutencao`, `Modelo` e `Financeiro`
+- pagina inicial reorganizada com `Painel de reservas` mostrando cards por chale
+- cards do painel de reservas agora exibem status `Disponivel`, `Reservado` ou `Manutencao`
+- cards reservados agora mostram tooltip no hover com nome e telefone do cliente
+- cabeçalho antigo da home removido para deixar o painel mais direto
+- CRUD de `manutencao` implementado na API e no frontend
+- tela `Manutencao` conectada ao backend real
+- formulario de manutencao restrito para exibir apenas chales sem reserva ativa e sem manutencao ativa
+- entidades de checklist implementadas no sistema:
+  - `checklist_item_modelo`
+  - `checklist_limpeza`
+  - `checklist_limpeza_item`
+- API criada para modelos de checklist e checklists de limpeza
+- nova tela `Modelo` adicionada no frontend para gerenciar modelos e checklists
+- `npm run check` validado com todas as alteracoes acima
+
 Importante ao voltar:
 
 - o banco `dbchale` responde em `localhost:5432`
 - como `USE_MOCK_DATA=false`, as listagens reais podem aparecer vazias ate cadastrar os primeiros registros
 - a branch protegida nao aceita push direto em `main`
+- o frontend em desenvolvimento agora usa `.next-dev`; a pasta `.next` fica reservada para `build`
+- se a interface ficar presa em estado antigo, limpar `localStorage` pela chave `chales.session`
+- a tela `Manutencao` agora depende de chales elegiveis sem reserva ativa e sem manutencao ativa
+- a tela `Modelo` usa status operacionais definidos no sistema:
+  - checklist de limpeza: `aberto`, `em_andamento`, `concluido`, `cancelado`
+  - item do checklist: `pendente`, `concluido`, `nao_aplicavel`
+- na API, os registros de checklist usam `idUsuario = 1` como padrao tecnico enquanto nao houver gestao real de usuarios operacionais
 
 Proximo passo recomendado:
 
 1. subir `npm run dev:api`
 2. subir `npm run dev:web`
-3. validar visualmente o fluxo de `comodidades` no navegador
-4. validar o vinculo de comodidades diretamente pela UI de `chales`
-5. validar persistencia real no PostgreSQL para `chales`, `comodidades`, `clientes` e `reservas`
+3. validar visualmente a home nova no estilo `AdminLTE`
+4. validar o `Painel de reservas` com hover de cliente nos chales reservados
+5. validar o CRUD de `Manutencao` na UI com persistencia real
+6. validar a regra de elegibilidade de chale na manutencao
+7. validar o CRUD de `Modelo` e `Checklist de limpeza` na UI com persistencia real
+8. validar se os checklists criados aparecem corretamente com seus itens
+9. validar o vinculo de comodidades diretamente pela UI de `chales`
 
 Depois disso:
 
@@ -175,6 +217,10 @@ Depois disso:
 2. validar criacao de uma `comodidade`
 3. validar criacao de um `cliente`
 4. validar criacao e edicao de uma `reserva`
+5. validar criacao, edicao e exclusao de uma `manutencao`
+6. validar criacao, edicao e exclusao de um `modelo de checklist`
+7. validar criacao, edicao e exclusao de um `checklist de limpeza`
+8. revisar se ainda existe algum loading indevido ao navegar entre `login`, `dashboard`, `manutencao` e `modelo`
 
 ## Proximos passos recomendados
 

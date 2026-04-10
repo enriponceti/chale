@@ -15,22 +15,23 @@ function AuthGate({ children }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const { status } = useAuth();
+  const isLoginPage = pathname === "/login";
 
   useEffect(() => {
-    if (status === "unauthenticated" && pathname !== "/login") {
+    if (status === "unauthenticated" && !isLoginPage) {
       router.replace("/login");
     }
 
-    if (status === "authenticated" && pathname === "/login") {
+    if (status === "authenticated" && isLoginPage) {
       router.replace("/");
     }
-  }, [pathname, router, status]);
+  }, [isLoginPage, router, status]);
 
-  if (
-    status === "loading" ||
-    (status === "unauthenticated" && pathname !== "/login") ||
-    (status === "authenticated" && pathname === "/login")
-  ) {
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
+  if (status === "loading" || status === "unauthenticated") {
     return (
       <Box
         sx={{
@@ -61,10 +62,6 @@ function AuthGate({ children }: Props) {
         </Stack>
       </Box>
     );
-  }
-
-  if (pathname === "/login") {
-    return <>{children}</>;
   }
 
   return <AdminShell>{children}</AdminShell>;

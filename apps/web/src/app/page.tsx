@@ -1,13 +1,18 @@
 import { Box, Stack } from "@mui/material";
+import { ChalesStatusPanel } from "../components/dashboard/chales-status-panel";
 import { ExperiencePanel } from "../components/dashboard/experience-panel";
 import { ReservationsTable } from "../components/dashboard/reservations-table";
 import { StatCard } from "../components/dashboard/stat-card";
-import { PageHeader } from "../components/ui/page-header";
-import { getDashboard } from "../lib/api";
+import { getChales, getClientes, getDashboard, getReservasDetalhadas } from "../lib/api";
 import { capitalize, formatCurrency, formatDateRange } from "../lib/format";
 
 export default async function HomePage() {
-  const dashboard = await getDashboard();
+  const [dashboard, chales, reservas, clientes] = await Promise.all([
+    getDashboard(),
+    getChales(),
+    getReservasDetalhadas(),
+    getClientes()
+  ]);
   const dashboardCards = [
     {
       label: "Ocupacao atual",
@@ -41,13 +46,49 @@ export default async function HomePage() {
     valor: formatCurrency(item.valorTotal)
   }));
 
+  const activeReservationStatuses = new Set(["pendente", "confirmada", "hospedado"]);
+  const chaleCards = chales.map((chale) => {
+    const activeReservation = reservas.find(
+      (reserva) =>
+        reserva.idChale === chale.id && activeReservationStatuses.has(reserva.statusReserva)
+    );
+
+    const status =
+      chale.status === "manutencao"
+        ? ("manutencao" as const)
+        : activeReservation
+          ? ("reservado" as const)
+          : ("disponivel" as const);
+
+    const detalhe =
+      status === "manutencao"
+        ? "Unidade indisponivel para novas reservas."
+        : activeReservation
+          ? `Reserva #${activeReservation.id} entre ${formatDateRange(
+              activeReservation.dataCheckinPrevisto,
+              activeReservation.dataCheckoutPrevisto
+            )}`
+          : "Livre para nova reserva neste momento.";
+
+    return {
+      id: chale.id,
+      codigo: chale.codigo,
+      nome: chale.nome,
+      status,
+      detalhe,
+      clienteNome: activeReservation
+        ? clientes.find((cliente) => cliente.id === activeReservation.idCliente)?.nomeCompleto
+        : undefined,
+      clienteTelefone: activeReservation
+        ? clientes.find((cliente) => cliente.id === activeReservation.idCliente)?.telefone ||
+          clientes.find((cliente) => cliente.id === activeReservation.idCliente)?.celular
+        : undefined
+    };
+  });
+
   return (
     <Stack spacing={3}>
-      <PageHeader
-        eyebrow="Dashboard"
-        title="Painel de administracao dos chales"
-        description="Acompanhe ocupacao, operacao, manutencao e desempenho comercial em um template pensado para hotelaria e hospedagem."
-      />
+      <ChalesStatusPanel cards={chaleCards} />
 
       <Box
         sx={{

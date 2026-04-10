@@ -11,6 +11,27 @@ import {
 import { clienteSchema } from "../modules/clientes/clientes.schemas.js";
 import { getDashboardSummary } from "../modules/dashboard/dashboard.service.js";
 import {
+  checklistItemModeloSchema,
+  checklistLimpezaSchema
+} from "../modules/checklists/checklists.schemas.js";
+import {
+  createChecklistLimpeza,
+  createChecklistModelo,
+  deleteChecklistLimpeza,
+  deleteChecklistModelo,
+  listChecklistModelos,
+  listChecklistsLimpeza,
+  updateChecklistLimpeza,
+  updateChecklistModelo
+} from "../modules/checklists/checklists.service.js";
+import {
+  createManutencao,
+  deleteManutencao,
+  listManutencoes,
+  updateManutencao
+} from "../modules/manutencoes/manutencoes.service.js";
+import { manutencaoSchema } from "../modules/manutencoes/manutencoes.schemas.js";
+import {
   createComodidade,
   deleteComodidade,
   listChaleComodidades,
@@ -101,6 +122,99 @@ apiRouter.get(
   "/clientes",
   asyncHandler(async (_req, res) => {
     res.json(await listClientes());
+  })
+);
+
+apiRouter.get(
+  "/checklist-modelos",
+  asyncHandler(async (_req, res) => {
+    res.json(await listChecklistModelos());
+  })
+);
+
+apiRouter.post(
+  "/checklist-modelos",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    res.status(201).json(await createChecklistModelo(checklistItemModeloSchema.parse(req.body)));
+  })
+);
+
+apiRouter.put(
+  "/checklist-modelos/:id",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    res.json(await updateChecklistModelo(Number(req.params.id), checklistItemModeloSchema.parse(req.body)));
+  })
+);
+
+apiRouter.delete(
+  "/checklist-modelos/:id",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    res.json(await deleteChecklistModelo(Number(req.params.id)));
+  })
+);
+
+apiRouter.get(
+  "/checklists-limpeza",
+  asyncHandler(async (_req, res) => {
+    res.json(await listChecklistsLimpeza());
+  })
+);
+
+apiRouter.post(
+  "/checklists-limpeza",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    res.status(201).json(await createChecklistLimpeza(checklistLimpezaSchema.parse(req.body)));
+  })
+);
+
+apiRouter.put(
+  "/checklists-limpeza/:id",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    res.json(await updateChecklistLimpeza(Number(req.params.id), checklistLimpezaSchema.parse(req.body)));
+  })
+);
+
+apiRouter.delete(
+  "/checklists-limpeza/:id",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    res.json(await deleteChecklistLimpeza(Number(req.params.id)));
+  })
+);
+
+apiRouter.get(
+  "/manutencoes",
+  asyncHandler(async (_req, res) => {
+    res.json(await listManutencoes());
+  })
+);
+
+apiRouter.post(
+  "/manutencoes",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    res.status(201).json(await createManutencao(manutencaoSchema.parse(req.body)));
+  })
+);
+
+apiRouter.put(
+  "/manutencoes/:id",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    res.json(await updateManutencao(Number(req.params.id), manutencaoSchema.parse(req.body)));
+  })
+);
+
+apiRouter.delete(
+  "/manutencoes/:id",
+  authenticate,
+  asyncHandler(async (req, res) => {
+    res.json(await deleteManutencao(Number(req.params.id)));
   })
 );
 

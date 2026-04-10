@@ -14,10 +14,11 @@ export function PageHeader({ eyebrow, title, description, action }: Props) {
   return (
     <Box
       sx={{
-        p: { xs: 2.5, md: 3 },
-        borderRadius: 4,
-        border: "1px solid rgba(15, 107, 99, 0.08)",
-        backgroundColor: "rgba(255,255,255,0.78)"
+        p: { xs: 2, md: 2.5 },
+        borderRadius: 1.5,
+        border: "1px solid #dee2e6",
+        backgroundColor: "#ffffff",
+        boxShadow: "0 1px 2px rgba(0, 0, 0, 0.06)"
       }}
     >
       <Stack
@@ -28,16 +29,15 @@ export function PageHeader({ eyebrow, title, description, action }: Props) {
       >
         <Box>
           <Typography
-            variant="overline"
-            color="primary.main"
-            sx={{ letterSpacing: "0.12em", fontWeight: 700 }}
+            variant="caption"
+            sx={{ color: "text.secondary", letterSpacing: "0.08em", fontWeight: 700 }}
           >
             {eyebrow}
           </Typography>
-          <Typography variant="h3" sx={{ mt: 0.5 }}>
+          <Typography variant="h4" sx={{ mt: 0.25, fontWeight: 600 }}>
             {title}
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, maxWidth: 760 }}>
             {description}
           </Typography>
         </Box>
