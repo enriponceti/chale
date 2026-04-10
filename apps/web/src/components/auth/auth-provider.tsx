@@ -25,40 +25,26 @@ export function AuthProvider({ children }: Props) {
   const [status, setStatus] = useState<AuthStatus>("loading");
 
   useEffect(() => {
-    let mounted = true;
-
     try {
       const storedValue = window.localStorage.getItem(AUTH_STORAGE_KEY);
 
       if (!storedValue) {
-        if (mounted) {
-          setStatus("unauthenticated");
-        }
+        setStatus("unauthenticated");
         return;
       }
 
       const parsed = JSON.parse(storedValue) as AuthSession;
-      if (mounted) {
+      if (parsed?.token && parsed?.user) {
         setSession(parsed);
         setStatus("authenticated");
+      } else {
+        window.localStorage.removeItem(AUTH_STORAGE_KEY);
+        setStatus("unauthenticated");
       }
     } catch {
       window.localStorage.removeItem(AUTH_STORAGE_KEY);
-      if (mounted) {
-        setStatus("unauthenticated");
-      }
+      setStatus("unauthenticated");
     }
-
-    const fallbackTimer = window.setTimeout(() => {
-      if (mounted) {
-        setStatus((current) => (current === "loading" ? "unauthenticated" : current));
-      }
-    }, 1200);
-
-    return () => {
-      mounted = false;
-      window.clearTimeout(fallbackTimer);
-    };
   }, []);
 
   const value: AuthContextValue = {

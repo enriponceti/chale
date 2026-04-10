@@ -67,61 +67,70 @@ const emptyForm: ChaleInput = {
 };
 
 function validateChaleForm(form: ChaleInput) {
-  const errors: string[] = [];
+  const errors: Partial<Record<keyof ChaleInput, string>> = {};
 
   if (form.codigo.trim().length < 2) {
-    errors.push("Codigo deve ter pelo menos 2 caracteres.");
+    errors.codigo = "Codigo deve ter pelo menos 2 caracteres.";
   }
 
   if (form.nome.trim().length < 3) {
-    errors.push("Nome deve ter pelo menos 3 caracteres.");
+    errors.nome = "Nome deve ter pelo menos 3 caracteres.";
   }
 
   if (form.descricao.trim().length < 5) {
-    errors.push("Descricao deve ter pelo menos 5 caracteres.");
+    errors.descricao = "Descricao deve ter pelo menos 5 caracteres.";
   }
 
   if (!Number.isInteger(form.capacidadeMaxima) || form.capacidadeMaxima <= 0) {
-    errors.push("Capacidade maxima deve ser um numero inteiro maior que zero.");
+    errors.capacidadeMaxima = "Capacidade maxima deve ser um numero inteiro maior que zero.";
   }
 
   if (!Number.isInteger(form.qtdQuartos) || form.qtdQuartos <= 0) {
-    errors.push("Quantidade de quartos deve ser um numero inteiro maior que zero.");
+    errors.qtdQuartos = "Quantidade de quartos deve ser um numero inteiro maior que zero.";
   }
 
   if (!Number.isInteger(form.qtdBanheiros) || form.qtdBanheiros <= 0) {
-    errors.push("Quantidade de banheiros deve ser um numero inteiro maior que zero.");
+    errors.qtdBanheiros = "Quantidade de banheiros deve ser um numero inteiro maior que zero.";
   }
 
   if (!Number.isInteger(form.qtdCamasCasal) || form.qtdCamasCasal < 0) {
-    errors.push("Quantidade de camas de casal deve ser zero ou mais.");
+    errors.qtdCamasCasal = "Quantidade de camas de casal deve ser zero ou mais.";
   }
 
   if (!Number.isInteger(form.qtdCamasSolteiro) || form.qtdCamasSolteiro < 0) {
-    errors.push("Quantidade de camas de solteiro deve ser zero ou mais.");
+    errors.qtdCamasSolteiro = "Quantidade de camas de solteiro deve ser zero ou mais.";
   }
 
   if (!Number.isFinite(form.valorDiariaBase) || form.valorDiariaBase <= 0) {
-    errors.push("Valor da diaria deve ser maior que zero.");
+    errors.valorDiariaBase = "Valor da diaria deve ser maior que zero.";
   }
 
   if (!Number.isFinite(form.areaM2) || form.areaM2 <= 0) {
-    errors.push("Area em m2 deve ser maior que zero.");
+    errors.areaM2 = "Area em m2 deve ser maior que zero.";
   }
 
   if (form.localizacaoInterna.trim().length < 2) {
-    errors.push("Localizacao interna deve ter pelo menos 2 caracteres.");
+    errors.localizacaoInterna = "Localizacao interna deve ter pelo menos 2 caracteres.";
   }
 
   if (!/^\d{2}:\d{2}$/.test(form.checkinPadrao)) {
-    errors.push("Check-in padrao deve estar no formato HH:MM.");
+    errors.checkinPadrao = "Check-in padrao deve estar no formato HH:MM.";
   }
 
   if (!/^\d{2}:\d{2}$/.test(form.checkoutPadrao)) {
-    errors.push("Checkout padrao deve estar no formato HH:MM.");
+    errors.checkoutPadrao = "Checkout padrao deve estar no formato HH:MM.";
   }
 
   return errors;
+}
+
+function formatCurrencyInput(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
 }
 
 export function ChalesManager({ initialChales }: Props) {
@@ -130,7 +139,10 @@ export function ChalesManager({ initialChales }: Props) {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ChaleInput>(emptyForm);
+  const [valorDiariaDisplay, setValorDiariaDisplay] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ChaleInput, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [activeChale, setActiveChale] = useState<ChaleListItem | null>(null);
@@ -241,7 +253,10 @@ export function ChalesManager({ initialChales }: Props) {
   function handleOpenCreate() {
     setEditingId(null);
     setForm(emptyForm);
+    setValorDiariaDisplay("");
     setError(null);
+    setFormError(null);
+    setFieldErrors({});
     setOpen(true);
   }
 
@@ -263,7 +278,10 @@ export function ChalesManager({ initialChales }: Props) {
       checkinPadrao: chale.checkinPadrao,
       checkoutPadrao: chale.checkoutPadrao
     });
+    setValorDiariaDisplay(formatCurrencyInput(chale.valorDiariaBase));
     setError(null);
+    setFormError(null);
+    setFieldErrors({});
     setOpen(true);
   }
 
@@ -273,11 +291,26 @@ export function ChalesManager({ initialChales }: Props) {
     }
 
     setOpen(false);
+    setValorDiariaDisplay("");
+    setFormError(null);
+    setFieldErrors({});
+  }
+
+  function handleValorDiariaChange(value: string) {
+    const digitsOnly = value.replace(/\D/g, "");
+    const parsedValue = digitsOnly ? Number(digitsOnly) / 100 : 0;
+
+    setForm((current) => ({
+      ...current,
+      valorDiariaBase: parsedValue
+    }));
+
+    setValorDiariaDisplay(digitsOnly ? formatCurrencyInput(parsedValue) : "");
   }
 
   async function handleSubmit() {
     if (!session?.token) {
-      setError("Sessao expirada. Entre novamente.");
+      setFormError("Sessao expirada. Entre novamente.");
       return;
     }
 
@@ -298,13 +331,16 @@ export function ChalesManager({ initialChales }: Props) {
       };
 
       const validationErrors = validateChaleForm(payload);
-      if (validationErrors.length > 0) {
-        setError(validationErrors.join(" "));
+      if (Object.keys(validationErrors).length > 0) {
+        setFieldErrors(validationErrors);
+        setFormError("Preencha os campos obrigatorios destacados para continuar.");
         return;
       }
 
       setIsSubmitting(true);
       setError(null);
+      setFormError(null);
+      setFieldErrors({});
 
       const nextItem = editingId
         ? await authorizedJson<ChaleListItem>(`/chales/${editingId}`, session.token, {
@@ -322,8 +358,9 @@ export function ChalesManager({ initialChales }: Props) {
           : [...current, nextItem].sort((a, b) => a.nome.localeCompare(b.nome))
       );
       setOpen(false);
+      setValorDiariaDisplay("");
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Nao foi possivel salvar.");
+      setFormError(submitError instanceof Error ? submitError.message : "Nao foi possivel salvar.");
     } finally {
       setIsSubmitting(false);
     }
@@ -595,6 +632,11 @@ export function ChalesManager({ initialChales }: Props) {
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
         <DialogTitle>{editingId ? "Editar chale" : "Novo chale"}</DialogTitle>
         <DialogContent>
+          {formError ? (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {formError}
+            </Alert>
+          ) : null}
           <Box
             sx={{
               pt: 1,
@@ -607,17 +649,21 @@ export function ChalesManager({ initialChales }: Props) {
             }}
           >
             <TextField
-              label="Codigo"
+              label="Codigo *"
               value={form.codigo}
               onChange={(event) => setForm((current) => ({ ...current, codigo: event.target.value }))}
+              error={Boolean(fieldErrors.codigo)}
+              helperText={fieldErrors.codigo}
             />
             <TextField
-              label="Nome"
+              label="Nome *"
               value={form.nome}
               onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))}
+              error={Boolean(fieldErrors.nome)}
+              helperText={fieldErrors.nome}
             />
             <TextField
-              label="Descricao"
+              label="Descricao *"
               sx={{ gridColumn: { xs: "1 / -1", sm: "1 / -1" } }}
               value={form.descricao}
               onChange={(event) =>
@@ -625,6 +671,8 @@ export function ChalesManager({ initialChales }: Props) {
               }
               multiline
               minRows={3}
+              error={Boolean(fieldErrors.descricao)}
+              helperText={fieldErrors.descricao}
             />
             <TextField
               select
@@ -642,7 +690,7 @@ export function ChalesManager({ initialChales }: Props) {
               <MenuItem value="manutencao">Manutencao</MenuItem>
             </TextField>
             <TextField
-              label="Capacidade maxima"
+              label="Capacidade maxima *"
               type="number"
               value={form.capacidadeMaxima}
               onChange={(event) =>
@@ -651,9 +699,11 @@ export function ChalesManager({ initialChales }: Props) {
                   capacidadeMaxima: Number(event.target.value)
                 }))
               }
+              error={Boolean(fieldErrors.capacidadeMaxima)}
+              helperText={fieldErrors.capacidadeMaxima}
             />
             <TextField
-              label="Qtd. quartos"
+              label="Qtd. quartos *"
               type="number"
               value={form.qtdQuartos}
               onChange={(event) =>
@@ -662,9 +712,11 @@ export function ChalesManager({ initialChales }: Props) {
                   qtdQuartos: Number(event.target.value)
                 }))
               }
+              error={Boolean(fieldErrors.qtdQuartos)}
+              helperText={fieldErrors.qtdQuartos}
             />
             <TextField
-              label="Qtd. banheiros"
+              label="Qtd. banheiros *"
               type="number"
               value={form.qtdBanheiros}
               onChange={(event) =>
@@ -673,9 +725,11 @@ export function ChalesManager({ initialChales }: Props) {
                   qtdBanheiros: Number(event.target.value)
                 }))
               }
+              error={Boolean(fieldErrors.qtdBanheiros)}
+              helperText={fieldErrors.qtdBanheiros}
             />
             <TextField
-              label="Camas de casal"
+              label="Camas de casal *"
               type="number"
               value={form.qtdCamasCasal}
               onChange={(event) =>
@@ -684,9 +738,11 @@ export function ChalesManager({ initialChales }: Props) {
                   qtdCamasCasal: Number(event.target.value)
                 }))
               }
+              error={Boolean(fieldErrors.qtdCamasCasal)}
+              helperText={fieldErrors.qtdCamasCasal}
             />
             <TextField
-              label="Camas de solteiro"
+              label="Camas de solteiro *"
               type="number"
               value={form.qtdCamasSolteiro}
               onChange={(event) =>
@@ -695,20 +751,20 @@ export function ChalesManager({ initialChales }: Props) {
                   qtdCamasSolteiro: Number(event.target.value)
                 }))
               }
+              error={Boolean(fieldErrors.qtdCamasSolteiro)}
+              helperText={fieldErrors.qtdCamasSolteiro}
             />
             <TextField
-              label="Valor da diaria"
-              type="number"
-              value={form.valorDiariaBase}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  valorDiariaBase: Number(event.target.value)
-                }))
-              }
+              label="Valor da diaria *"
+              value={valorDiariaDisplay}
+              onChange={(event) => handleValorDiariaChange(event.target.value)}
+              error={Boolean(fieldErrors.valorDiariaBase)}
+              helperText={fieldErrors.valorDiariaBase}
+              inputMode="numeric"
+              placeholder="R$ 0,00"
             />
             <TextField
-              label="Area em m2"
+              label="Area em m2 *"
               type="number"
               value={form.areaM2}
               onChange={(event) =>
@@ -717,9 +773,11 @@ export function ChalesManager({ initialChales }: Props) {
                   areaM2: Number(event.target.value)
                 }))
               }
+              error={Boolean(fieldErrors.areaM2)}
+              helperText={fieldErrors.areaM2}
             />
             <TextField
-              label="Localizacao interna"
+              label="Localizacao interna *"
               sx={{ gridColumn: { xs: "1 / -1", sm: "1 / -1" } }}
               value={form.localizacaoInterna}
               onChange={(event) =>
@@ -728,9 +786,11 @@ export function ChalesManager({ initialChales }: Props) {
                   localizacaoInterna: event.target.value
                 }))
               }
+              error={Boolean(fieldErrors.localizacaoInterna)}
+              helperText={fieldErrors.localizacaoInterna}
             />
             <TextField
-              label="Check-in padrao"
+              label="Check-in padrao *"
               type="time"
               value={form.checkinPadrao}
               onChange={(event) =>
@@ -740,9 +800,11 @@ export function ChalesManager({ initialChales }: Props) {
                 }))
               }
               InputLabelProps={{ shrink: true }}
+              error={Boolean(fieldErrors.checkinPadrao)}
+              helperText={fieldErrors.checkinPadrao}
             />
             <TextField
-              label="Checkout padrao"
+              label="Checkout padrao *"
               type="time"
               value={form.checkoutPadrao}
               onChange={(event) =>
@@ -752,6 +814,8 @@ export function ChalesManager({ initialChales }: Props) {
                 }))
               }
               InputLabelProps={{ shrink: true }}
+              error={Boolean(fieldErrors.checkoutPadrao)}
+              helperText={fieldErrors.checkoutPadrao}
             />
           </Box>
         </DialogContent>

@@ -78,6 +78,96 @@ export type ComodidadeInput = {
   status: string;
 };
 
+export type ManutencaoListItem = {
+  id: number;
+  idChale: number;
+  chaleNome: string;
+  chaleCodigo: string;
+  tipoManutencao: string;
+  descricaoProblema: string;
+  dataAbertura: string;
+  dataInicio: string;
+  dataFim: string;
+  status: string;
+  responsavel: string;
+  fornecedor: string;
+  custo: number;
+  observacao: string;
+};
+
+export type ManutencaoInput = {
+  idChale: number;
+  tipoManutencao: "preventiva" | "corretiva" | "limpeza" | "inspescao";
+  descricaoProblema: string;
+  dataAbertura: string;
+  dataInicio: string;
+  dataFim: string;
+  status: "aberta" | "em_andamento" | "concluida" | "cancelada";
+  responsavel: string;
+  fornecedor: string;
+  custo: number;
+  observacao: string;
+};
+
+export type ChecklistItemModeloListItem = {
+  id: number;
+  descricao: string;
+  area: string;
+  obrigatorio: boolean;
+  ordem: number;
+  status: string;
+};
+
+export type ChecklistItemModeloInput = {
+  descricao: string;
+  area: string;
+  obrigatorio: boolean;
+  ordem: number;
+  status: string;
+};
+
+export type ChecklistLimpezaItemListItem = {
+  id: number;
+  idChecklist: number;
+  idItemModelo: number;
+  descricao: string;
+  statusItem: "pendente" | "concluido" | "nao_aplicavel";
+  dataExecucao: string;
+  idUsuario: number;
+  observacao: string;
+  itemModeloDescricao: string;
+};
+
+export type ChecklistLimpezaListItem = {
+  id: number;
+  idManutencao: number;
+  manutencaoDescricao: string;
+  chaleNome: string;
+  dataInicio: string;
+  dataFim: string;
+  status: "aberto" | "em_andamento" | "concluido" | "cancelado";
+  idUsuario: number;
+  observacao: string;
+  itens: ChecklistLimpezaItemListItem[];
+};
+
+export type ChecklistLimpezaItemInput = {
+  idItemModelo: number;
+  descricao: string;
+  statusItem: "pendente" | "concluido" | "nao_aplicavel";
+  dataExecucao: string;
+  observacao: string;
+};
+
+export type ChecklistLimpezaInput = {
+  idManutencao: number;
+  dataInicio: string;
+  dataFim: string;
+  status: "aberto" | "em_andamento" | "concluido" | "cancelado";
+  observacao: string;
+  itens: ChecklistLimpezaItemInput[];
+};
+
 export type ChaleComodidadeItem = {
   idComodidade: number;
   nome: string;
@@ -251,6 +341,18 @@ export async function getClientes() {
 
 export async function getComodidades() {
   return safeFetch<ComodidadeListItem[]>("/comodidades", []);
+}
+
+export async function getManutencoes() {
+  return safeFetch<ManutencaoListItem[]>("/manutencoes", []);
+}
+
+export async function getChecklistModelos() {
+  return safeFetch<ChecklistItemModeloListItem[]>("/checklist-modelos", []);
+}
+
+export async function getChecklistsLimpeza() {
+  return safeFetch<ChecklistLimpezaListItem[]>("/checklists-limpeza", []);
 }
 
 export async function getChaleComodidades(idChale: number) {

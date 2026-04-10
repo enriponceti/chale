@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   Chip,
+  Divider,
   Stack,
   Table,
   TableBody,
@@ -39,11 +40,19 @@ type Props = {
 export function ReservationsTable({ rows, title }: Props) {
   return (
     <Card>
-      <CardContent>
-        <Stack spacing={2}>
-          <Typography variant="h6">{title}</Typography>
+      <CardContent sx={{ p: 0 }}>
+        <Stack spacing={0}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 2.5, py: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              {title}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {rows.length} registros
+            </Typography>
+          </Stack>
+          <Divider />
 
-          <Table>
+          <Table sx={{ minWidth: 720 }}>
             <TableHead>
               <TableRow>
                 <TableCell>Reserva</TableCell>
@@ -58,7 +67,7 @@ export function ReservationsTable({ rows, title }: Props) {
             <TableBody>
               {rows.map((row) => (
                 <TableRow key={row.id} hover>
-                  <TableCell>#{row.id}</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>#{row.id}</TableCell>
                   <TableCell>{row.cliente}</TableCell>
                   <TableCell>{row.chale}</TableCell>
                   <TableCell>{row.periodo}</TableCell>
@@ -71,7 +80,9 @@ export function ReservationsTable({ rows, title }: Props) {
                     />
                   </TableCell>
                   <TableCell>{row.origem}</TableCell>
-                  <TableCell align="right">{row.valor}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 700 }}>
+                    {row.valor}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

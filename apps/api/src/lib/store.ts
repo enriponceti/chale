@@ -4,6 +4,9 @@ import {
   ComodidadeInput,
   ComodidadeListItem,
   ClienteListItem,
+  ChecklistItemModeloListItem,
+  ChecklistLimpezaListItem,
+  ManutencaoListItem,
   ReservationEntity,
   ReservationListItem
 } from "../types/domain.js";
@@ -13,6 +16,10 @@ type Counters = {
   comodidades: number;
   clientes: number;
   reservas: number;
+  manutencoes: number;
+  checklistModelos: number;
+  checklists: number;
+  checklistItens: number;
 };
 
 type Store = {
@@ -21,6 +28,9 @@ type Store = {
   chaleComodidades: Array<{ idChale: number; idComodidade: number; observacao: string }>;
   clientes: ClienteListItem[];
   reservas: ReservationEntity[];
+  manutencoes: ManutencaoListItem[];
+  checklistModelos: ChecklistItemModeloListItem[];
+  checklists: ChecklistLimpezaListItem[];
   counters: Counters;
 };
 
@@ -251,17 +261,108 @@ const initialReservas: ReservationEntity[] = [
   }
 ];
 
+const initialManutencoes: ManutencaoListItem[] = [
+  {
+    id: 1,
+    idChale: 2,
+    chaleNome: "Cabana da Serra",
+    chaleCodigo: "CH-002",
+    tipoManutencao: "corretiva",
+    descricaoProblema: "Vazamento no banheiro principal",
+    dataAbertura: "2026-04-02",
+    dataInicio: "2026-04-03",
+    dataFim: "",
+    status: "em_andamento",
+    responsavel: "Equipe interna",
+    fornecedor: "HidraFort",
+    custo: 480,
+    observacao: "Aguardando troca completa da tubulacao."
+  }
+];
+
+const initialChecklistModelos: ChecklistItemModeloListItem[] = [
+  {
+    id: 1,
+    descricao: "Trocar roupas de cama",
+    area: "quarto",
+    obrigatorio: true,
+    ordem: 1,
+    status: "ativo"
+  },
+  {
+    id: 2,
+    descricao: "Higienizar banheiro",
+    area: "banheiro",
+    obrigatorio: true,
+    ordem: 2,
+    status: "ativo"
+  },
+  {
+    id: 3,
+    descricao: "Repor amenities",
+    area: "quarto",
+    obrigatorio: false,
+    ordem: 3,
+    status: "ativo"
+  }
+];
+
+const initialChecklists: ChecklistLimpezaListItem[] = [
+  {
+    id: 1,
+    idManutencao: 1,
+    manutencaoDescricao: "Vazamento no banheiro principal",
+    chaleNome: "Cabana da Serra",
+    dataInicio: "2026-04-03",
+    dataFim: "",
+    status: "em_andamento",
+    idUsuario: 1,
+    observacao: "Checklist inicial da manutencao corretiva.",
+    itens: [
+      {
+        id: 1,
+        idChecklist: 1,
+        idItemModelo: 1,
+        descricao: "Trocar roupas de cama",
+        statusItem: "concluido",
+        dataExecucao: "2026-04-03",
+        idUsuario: 1,
+        observacao: "",
+        itemModeloDescricao: "Trocar roupas de cama"
+      },
+      {
+        id: 2,
+        idChecklist: 1,
+        idItemModelo: 2,
+        descricao: "Higienizar banheiro",
+        statusItem: "pendente",
+        dataExecucao: "2026-04-03",
+        idUsuario: 1,
+        observacao: "",
+        itemModeloDescricao: "Higienizar banheiro"
+      }
+    ]
+  }
+];
+
 export const store: Store = {
   chales: [...initialChales],
   comodidades: [...initialComodidades],
   chaleComodidades: [...initialChaleComodidades],
   clientes: [...initialClientes],
   reservas: [...initialReservas],
+  manutencoes: [...initialManutencoes],
+  checklistModelos: [...initialChecklistModelos],
+  checklists: [...initialChecklists],
   counters: {
     chales: 3,
     comodidades: 4,
     clientes: 3,
-    reservas: 1003
+    reservas: 1003,
+    manutencoes: 1,
+    checklistModelos: 3,
+    checklists: 1,
+    checklistItens: 2
   }
 };
 

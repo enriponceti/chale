@@ -57,8 +57,82 @@ const statusColor: Record<string, "success" | "warning" | "info" | "default"> = 
   no_show: "default"
 };
 
+type ReservaFieldErrors = Partial<Record<keyof ReservaInput, string>>;
+
 function safeValue(value?: string | null) {
   return value && value.trim() ? value : "";
+}
+
+function formatCurrencyInput(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+}
+
+function parseCurrencyInput(value: string) {
+  const digitsOnly = value.replace(/\D/g, "");
+  return digitsOnly ? Number(digitsOnly) / 100 : 0;
+}
+
+function validateReservaForm(form: ReservaInput): ReservaFieldErrors {
+  const errors: ReservaFieldErrors = {};
+
+  if (!form.idChale) {
+    errors.idChale = "Selecione um chale.";
+  }
+
+  if (!form.idCliente) {
+    errors.idCliente = "Selecione um cliente.";
+  }
+
+  if (!form.dataCheckinPrevisto) {
+    errors.dataCheckinPrevisto = "Informe a data de check-in.";
+  }
+
+  if (!form.dataCheckoutPrevisto) {
+    errors.dataCheckoutPrevisto = "Informe a data de check-out.";
+  }
+
+  if (
+    form.dataCheckinPrevisto &&
+    form.dataCheckoutPrevisto &&
+    form.dataCheckoutPrevisto <= form.dataCheckinPrevisto
+  ) {
+    errors.dataCheckoutPrevisto = "O check-out deve ser posterior ao check-in.";
+  }
+
+  if (!Number.isInteger(form.qtdAdultos) || form.qtdAdultos <= 0) {
+    errors.qtdAdultos = "Informe pelo menos 1 adulto.";
+  }
+
+  if (!Number.isInteger(form.qtdCriancas) || form.qtdCriancas < 0) {
+    errors.qtdCriancas = "Criancas deve ser zero ou mais.";
+  }
+
+  if (!Number.isFinite(form.valorDiariaAplicada) || form.valorDiariaAplicada <= 0) {
+    errors.valorDiariaAplicada = "Informe um valor de diaria maior que zero.";
+  }
+
+  if (!Number.isFinite(form.valorDesconto) || form.valorDesconto < 0) {
+    errors.valorDesconto = "Desconto deve ser zero ou mais.";
+  }
+
+  if (!Number.isFinite(form.valorTaxaLimpeza) || form.valorTaxaLimpeza < 0) {
+    errors.valorTaxaLimpeza = "Taxa de limpeza deve ser zero ou mais.";
+  }
+
+  if (!Number.isFinite(form.valorTaxaExtra) || form.valorTaxaExtra < 0) {
+    errors.valorTaxaExtra = "Taxa extra deve ser zero ou mais.";
+  }
+
+  if (!form.origemReserva.trim()) {
+    errors.origemReserva = "Informe a origem da reserva.";
+  }
+
+  return errors;
 }
 
 function buildEmptyForm(chales: ChaleListItem[], clientes: ClienteListItem[]): ReservaInput {
@@ -87,10 +161,44 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ReservaInput>(() => buildEmptyForm(initialChales, initialClientes));
+  const [valorDiariaDisplay, setValorDiariaDisplay] = useState(() =>
+    formatCurrencyInput(initialChales[0]?.valorDiariaBase ?? 0)
+  );
+  const [valorDescontoDisplay, setValorDescontoDisplay] = useState(() => formatCurrencyInput(0));
+  const [valorTaxaLimpezaDisplay, setValorTaxaLimpezaDisplay] = useState(() => formatCurrencyInput(0));
+  const [valorTaxaExtraDisplay, setValorTaxaExtraDisplay] = useState(() => formatCurrencyInput(0));
   const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ReservaFieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [activeReserva, setActiveReserva] = useState<ReservaEntity | null>(null);
+
+  function setCurrencyField(
+    key: "valorDiariaAplicada" | "valorDesconto" | "valorTaxaLimpeza" | "valorTaxaExtra",
+    value: string
+  ) {
+    const parsedValue = parseCurrencyInput(value);
+
+    setForm((current) => ({
+      ...current,
+      [key]: parsedValue
+    }));
+
+    const formattedValue = formatCurrencyInput(parsedValue);
+    if (key === "valorDiariaAplicada") {
+      setValorDiariaDisplay(formattedValue);
+    }
+    if (key === "valorDesconto") {
+      setValorDescontoDisplay(formattedValue);
+    }
+    if (key === "valorTaxaLimpeza") {
+      setValorTaxaLimpezaDisplay(formattedValue);
+    }
+    if (key === "valorTaxaExtra") {
+      setValorTaxaExtraDisplay(formattedValue);
+    }
+  }
 
   function handleOpenMenu(event: React.MouseEvent<HTMLElement>, reserva: ReservaEntity) {
     setMenuAnchorEl(event.currentTarget);
@@ -117,8 +225,15 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
 
   function handleOpenCreate() {
     setEditingId(null);
-    setForm(buildEmptyForm(initialChales, initialClientes));
+    const nextForm = buildEmptyForm(initialChales, initialClientes);
+    setForm(nextForm);
+    setValorDiariaDisplay(formatCurrencyInput(nextForm.valorDiariaAplicada));
+    setValorDescontoDisplay(formatCurrencyInput(nextForm.valorDesconto));
+    setValorTaxaLimpezaDisplay(formatCurrencyInput(nextForm.valorTaxaLimpeza));
+    setValorTaxaExtraDisplay(formatCurrencyInput(nextForm.valorTaxaExtra));
     setError(null);
+    setFormError(null);
+    setFieldErrors({});
     setOpen(true);
   }
 
@@ -141,7 +256,13 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
       origemReserva: safeValue(reserva.origemReserva) || "site",
       observacao: safeValue(reserva.observacao)
     });
+    setValorDiariaDisplay(formatCurrencyInput(reserva.valorDiariaAplicada));
+    setValorDescontoDisplay(formatCurrencyInput(reserva.valorDesconto));
+    setValorTaxaLimpezaDisplay(formatCurrencyInput(reserva.valorTaxaLimpeza));
+    setValorTaxaExtraDisplay(formatCurrencyInput(reserva.valorTaxaExtra));
     setError(null);
+    setFormError(null);
+    setFieldErrors({});
     setOpen(true);
   }
 
@@ -151,16 +272,15 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
     }
 
     setOpen(false);
+    setFormError(null);
+    setFieldErrors({});
   }
 
   async function handleSubmit() {
     if (!session?.token) {
-      setError("Sessao expirada. Entre novamente.");
+      setFormError("Sessao expirada. Entre novamente.");
       return;
     }
-
-    setIsSubmitting(true);
-    setError(null);
 
     try {
       const payload = {
@@ -174,6 +294,18 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
         valorTaxaLimpeza: Number(form.valorTaxaLimpeza),
         valorTaxaExtra: Number(form.valorTaxaExtra)
       };
+
+      const validationErrors = validateReservaForm(payload);
+      if (Object.keys(validationErrors).length > 0) {
+        setFieldErrors(validationErrors);
+        setFormError("Preencha os campos obrigatorios destacados para continuar.");
+        return;
+      }
+
+      setIsSubmitting(true);
+      setError(null);
+      setFormError(null);
+      setFieldErrors({});
 
       const nextItem = editingId
         ? await authorizedJson<ReservaEntity>(`/reservas/${editingId}`, session.token, {
@@ -194,7 +326,7 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
       );
       setOpen(false);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Nao foi possivel salvar.");
+      setFormError(submitError instanceof Error ? submitError.message : "Nao foi possivel salvar.");
     } finally {
       setIsSubmitting(false);
     }
@@ -464,10 +596,15 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
         <DialogTitle>{editingId ? "Editar reserva" : "Nova reserva"}</DialogTitle>
         <DialogContent>
+          {formError ? (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              {formError}
+            </Alert>
+          ) : null}
           <Stack spacing={2} sx={{ pt: 1 }}>
             <TextField
               select
-              label="Chale"
+              label="Chale *"
               value={form.idChale}
               onChange={(event) => {
                 const nextChaleId = Number(event.target.value);
@@ -476,7 +613,10 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
                   idChale: nextChaleId,
                   valorDiariaAplicada: syncChalePrice(nextChaleId)
                 }));
+                setValorDiariaDisplay(formatCurrencyInput(syncChalePrice(nextChaleId)));
               }}
+              error={Boolean(fieldErrors.idChale)}
+              helperText={fieldErrors.idChale}
             >
               {initialChales.map((chale) => (
                 <MenuItem key={chale.id} value={chale.id}>
@@ -486,11 +626,13 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
             </TextField>
             <TextField
               select
-              label="Cliente"
+              label="Cliente *"
               value={form.idCliente}
               onChange={(event) =>
                 setForm((current) => ({ ...current, idCliente: Number(event.target.value) }))
               }
+              error={Boolean(fieldErrors.idCliente)}
+              helperText={fieldErrors.idCliente}
             >
               {initialClientes.map((cliente) => (
                 <MenuItem key={cliente.id} value={cliente.id}>
@@ -500,7 +642,7 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
             </TextField>
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
               <TextField
-                label="Check-in"
+                label="Check-in *"
                 type="date"
                 value={form.dataCheckinPrevisto}
                 onChange={(event) =>
@@ -510,10 +652,12 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
                   }))
                 }
                 InputLabelProps={{ shrink: true }}
+                error={Boolean(fieldErrors.dataCheckinPrevisto)}
+                helperText={fieldErrors.dataCheckinPrevisto}
                 fullWidth
               />
               <TextField
-                label="Check-out"
+                label="Check-out *"
                 type="date"
                 value={form.dataCheckoutPrevisto}
                 onChange={(event) =>
@@ -523,6 +667,8 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
                   }))
                 }
                 InputLabelProps={{ shrink: true }}
+                error={Boolean(fieldErrors.dataCheckoutPrevisto)}
+                helperText={fieldErrors.dataCheckoutPrevisto}
                 fullWidth
               />
             </Stack>
@@ -556,67 +702,69 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
             </Stack>
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
               <TextField
-                label="Adultos"
+                label="Adultos *"
                 type="number"
                 value={form.qtdAdultos}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, qtdAdultos: Number(event.target.value) }))
                 }
+                error={Boolean(fieldErrors.qtdAdultos)}
+                helperText={fieldErrors.qtdAdultos}
                 fullWidth
               />
               <TextField
-                label="Criancas"
+                label="Criancas *"
                 type="number"
                 value={form.qtdCriancas}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, qtdCriancas: Number(event.target.value) }))
                 }
+                error={Boolean(fieldErrors.qtdCriancas)}
+                helperText={fieldErrors.qtdCriancas}
                 fullWidth
               />
             </Stack>
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
               <TextField
-                label="Valor da diaria"
-                type="number"
-                value={form.valorDiariaAplicada}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    valorDiariaAplicada: Number(event.target.value)
-                  }))
-                }
+                label="Valor da diaria *"
+                value={valorDiariaDisplay}
+                onChange={(event) => setCurrencyField("valorDiariaAplicada", event.target.value)}
+                error={Boolean(fieldErrors.valorDiariaAplicada)}
+                helperText={fieldErrors.valorDiariaAplicada}
+                inputMode="numeric"
+                placeholder="R$ 0,00"
                 fullWidth
               />
               <TextField
-                label="Desconto"
-                type="number"
-                value={form.valorDesconto}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, valorDesconto: Number(event.target.value) }))
-                }
+                label="Desconto *"
+                value={valorDescontoDisplay}
+                onChange={(event) => setCurrencyField("valorDesconto", event.target.value)}
+                error={Boolean(fieldErrors.valorDesconto)}
+                helperText={fieldErrors.valorDesconto}
+                inputMode="numeric"
+                placeholder="R$ 0,00"
                 fullWidth
               />
             </Stack>
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
               <TextField
-                label="Taxa de limpeza"
-                type="number"
-                value={form.valorTaxaLimpeza}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    valorTaxaLimpeza: Number(event.target.value)
-                  }))
-                }
+                label="Taxa de limpeza *"
+                value={valorTaxaLimpezaDisplay}
+                onChange={(event) => setCurrencyField("valorTaxaLimpeza", event.target.value)}
+                error={Boolean(fieldErrors.valorTaxaLimpeza)}
+                helperText={fieldErrors.valorTaxaLimpeza}
+                inputMode="numeric"
+                placeholder="R$ 0,00"
                 fullWidth
               />
               <TextField
-                label="Taxa extra"
-                type="number"
-                value={form.valorTaxaExtra}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, valorTaxaExtra: Number(event.target.value) }))
-                }
+                label="Taxa extra *"
+                value={valorTaxaExtraDisplay}
+                onChange={(event) => setCurrencyField("valorTaxaExtra", event.target.value)}
+                error={Boolean(fieldErrors.valorTaxaExtra)}
+                helperText={fieldErrors.valorTaxaExtra}
+                inputMode="numeric"
+                placeholder="R$ 0,00"
                 fullWidth
               />
             </Stack>
@@ -641,11 +789,13 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
                 <MenuItem value="no_show">No show</MenuItem>
               </TextField>
               <TextField
-                label="Origem"
+                label="Origem *"
                 value={form.origemReserva}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, origemReserva: event.target.value }))
                 }
+                error={Boolean(fieldErrors.origemReserva)}
+                helperText={fieldErrors.origemReserva}
                 fullWidth
               />
             </Stack>

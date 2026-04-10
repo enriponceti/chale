@@ -6,53 +6,65 @@ export const appTheme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#0F6B63",
-      dark: "#0A4F49",
-      light: "#4F9D94"
+      main: "#3c8dbc",
+      dark: "#2c6d95",
+      light: "#67a7cf"
     },
     secondary: {
-      main: "#D97706"
+      main: "#00a65a"
     },
     background: {
-      default: "#F6F3EE",
-      paper: "rgba(255,255,255,0.92)"
+      default: "#f4f6f9",
+      paper: "#ffffff"
     },
     text: {
-      primary: "#1D2433",
-      secondary: "#5E6678"
+      primary: "#1f2d3d",
+      secondary: "#6c757d"
+    },
+    success: {
+      main: "#00a65a"
+    },
+    warning: {
+      main: "#f39c12"
+    },
+    info: {
+      main: "#00c0ef"
     }
   },
   shape: {
-    borderRadius: 8
+    borderRadius: 6
   },
   typography: {
-    fontFamily: '"Manrope", "Avenir Next", "Segoe UI", sans-serif',
+    fontFamily: '"Source Sans 3", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
     h3: {
-      fontWeight: 800,
-      letterSpacing: "-0.04em"
-    },
-    h4: {
-      fontWeight: 700
-    },
-    h5: {
-      fontWeight: 700,
+      fontWeight: 600,
       letterSpacing: "-0.02em"
     },
+    h4: {
+      fontWeight: 600
+    },
+    h5: {
+      fontWeight: 600,
+      letterSpacing: "-0.01em"
+    },
     h6: {
-      fontWeight: 700
+      fontWeight: 600
+    },
+    body2: {
+      fontSize: "0.92rem"
     },
     button: {
       textTransform: "none",
-      fontWeight: 700
+      fontWeight: 600
     }
   },
   components: {
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 4,
-          border: "1px solid rgba(15, 107, 99, 0.03)",
-          boxShadow: "none"
+          borderRadius: 6,
+          border: "1px solid #dee2e6",
+          boxShadow: "0 1px 2px rgba(0, 0, 0, 0.08)"
         }
       }
     },
@@ -60,33 +72,41 @@ export const appTheme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: "none",
-          borderRadius: 4
+          borderRadius: 6
         }
       }
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          paddingInline: 18
+          borderRadius: 4,
+          paddingInline: 16,
+          boxShadow: "none"
+        },
+        containedPrimary: {
+          "&:hover": {
+            boxShadow: "none"
+          }
         }
       }
     },
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderColor: "rgba(15, 107, 99, 0.08)"
+          borderColor: "#e9ecef"
         },
         head: {
-          color: "#5E6678",
-          backgroundColor: "rgba(15, 107, 99, 0.03)"
+          color: "#495057",
+          backgroundColor: "#f8f9fa",
+          fontWeight: 700
         }
       }
     },
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          transition: "all 160ms ease"
+          transition: "all 160ms ease",
+          borderRadius: 4
         }
       }
     },
@@ -98,7 +118,15 @@ export const appTheme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          backgroundColor: "rgba(255,255,255,0.86)"
+          backgroundColor: "#ffffff",
+          borderRadius: 4
+        }
+      }
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 4
         }
       }
     }
