@@ -63,6 +63,10 @@ function safeValue(value?: string | null) {
   return value && value.trim() ? value : "";
 }
 
+function sortReservasByMostRecent(items: ReservaEntity[]) {
+  return [...items].sort((a, b) => b.dataCheckinPrevisto.localeCompare(a.dataCheckinPrevisto));
+}
+
 function formatCurrencyInput(value: number) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -157,7 +161,7 @@ function buildEmptyForm(chales: ChaleListItem[], clientes: ClienteListItem[]): R
 
 export function ReservasManager({ initialReservas, initialChales, initialClientes }: Props) {
   const { session } = useAuth();
-  const [reservas, setReservas] = useState(initialReservas);
+  const [reservas, setReservas] = useState(() => sortReservasByMostRecent(initialReservas));
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ReservaInput>(() => buildEmptyForm(initialChales, initialClientes));
@@ -318,11 +322,9 @@ export function ReservasManager({ initialReservas, initialChales, initialCliente
           });
 
       setReservas((current) =>
-        editingId
-          ? current.map((item) => (item.id === editingId ? nextItem : item))
-          : [...current, nextItem].sort((a, b) =>
-              a.dataCheckinPrevisto.localeCompare(b.dataCheckinPrevisto)
-            )
+        sortReservasByMostRecent(
+          editingId ? current.map((item) => (item.id === editingId ? nextItem : item)) : [...current, nextItem]
+        )
       );
       setOpen(false);
     } catch (submitError) {

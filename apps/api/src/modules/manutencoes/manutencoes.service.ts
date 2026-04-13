@@ -6,6 +6,7 @@ import { ManutencaoListItem } from "../../types/domain.js";
 import { ManutencaoInput } from "./manutencoes.schemas.js";
 
 const activeStatuses = new Set(["aberta", "em_andamento"]);
+const automaticCleaningDescription = "Limpeza automatica apos checkout";
 
 function normalizeOptionalString(value?: string) {
   const normalized = value?.trim() ?? "";
@@ -95,6 +96,31 @@ function syncChaleStatusInStore(idChale: number) {
   chale.status = activeCount > 0 ? "manutencao" : "ativo";
 }
 
+function hasOpenCleaningMaintenanceInStore(idChale: number, dataAbertura: string) {
+  return store.manutencoes.some(
+    (item) =>
+      item.idChale === idChale &&
+      item.tipoManutencao === "limpeza" &&
+      item.dataAbertura === dataAbertura &&
+      activeStatuses.has(item.status)
+  );
+}
+
+async function hasOpenCleaningMaintenanceInPrisma(idChale: number, dataAbertura: string) {
+  const count = await prisma.manutencao.count({
+    where: {
+      idChale,
+      tipoManutencao: "limpeza",
+      dataAbertura: new Date(`${dataAbertura}T00:00:00.000Z`),
+      status: {
+        in: Array.from(activeStatuses)
+      }
+    }
+  });
+
+  return count > 0;
+}
+
 export async function listManutencoes() {
   if (isMockMode()) {
     return [...store.manutencoes].sort((a, b) => b.dataAbertura.localeCompare(a.dataAbertura));
@@ -170,6 +196,30 @@ export async function createManutencao(input: ManutencaoInput) {
 
   await syncChaleStatusInPrisma(input.idChale);
   return mapManutencao(item);
+}
+
+export async function ensureCheckoutCleaningMaintenance(idChale: number, dataAbertura: string) {
+  if (isMockMode()) {
+    if (hasOpenCleaningMaintenanceInStore(idChale, dataAbertura)) {
+      return null;
+    }
+  } else if (await hasOpenCleaningMaintenanceInPrisma(idChale, dataAbertura)) {
+    return null;
+  }
+
+  return createManutencao({
+    idChale,
+    tipoManutencao: "limpeza",
+    descricaoProblema: automaticCleaningDescription,
+    dataAbertura,
+    dataInicio: "",
+    dataFim: "",
+    status: "aberta",
+    responsavel: "",
+    fornecedor: "",
+    custo: 0,
+    observacao: ""
+  });
 }
 
 export async function updateManutencao(id: number, input: ManutencaoInput) {

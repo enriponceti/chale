@@ -186,6 +186,23 @@ Atualizacao de encerramento em 10/04/2026:
 - nova tela `Modelo` adicionada no frontend para gerenciar modelos e checklists
 - `npm run check` validado com todas as alteracoes acima
 
+Atualizacao de encerramento em 13/04/2026:
+
+- identidade visual do login atualizada com imagem de fundo `fortim_login.webp`
+- login ajustado para prefetch da home e novo estado de loading global no App Router, reduzindo a sensacao de travamento ao entrar no painel
+- nome da aplicacao ajustado para `Chalés Admin` nos principais pontos do frontend
+- textos visiveis de `Manutenção` revisados no frontend para corrigir acentuacao sem alterar rotas ou contratos tecnicos
+- grade da tela de `Reservas` ajustada para listar da mais recente para a mais antiga
+- cards do `Dashboard` agora exibem o tipo da manutencao ativa no formato `Manutenção - <tipo>`
+- checkout de uma reserva agora cria automaticamente uma manutencao de `limpeza` com status `aberta` e data de abertura igual a data do checkout
+- a atualizacao da mesma reserva apos o checkout nao fica mais bloqueada pela manutencao automatica criada para o chale
+- chalés com manutencao ativa apenas do tipo `limpeza` agora podem receber novas reservas; manutencoes ativas dos demais tipos seguem bloqueando
+- simulacoes em modo mock confirmaram:
+  - criacao automatica da manutencao de limpeza no checkout
+  - ausencia de duplicidade ao salvar a mesma reserva novamente
+  - permissao de reserva em chale apenas com limpeza ativa
+  - bloqueio mantido para manutencao corretiva/preventiva/inspescao
+
 Importante ao voltar:
 
 - o banco `dbchale` responde em `localhost:5432`
@@ -194,6 +211,7 @@ Importante ao voltar:
 - o frontend em desenvolvimento agora usa `.next-dev`; a pasta `.next` fica reservada para `build`
 - se a interface ficar presa em estado antigo, limpar `localStorage` pela chave `chales.session`
 - a tela `Manutencao` agora depende de chales elegiveis sem reserva ativa e sem manutencao ativa
+- manutencoes automaticas de limpeza podem ser abertas no checkout e nao devem bloquear novas reservas por si so
 - a tela `Modelo` usa status operacionais definidos no sistema:
   - checklist de limpeza: `aberto`, `em_andamento`, `concluido`, `cancelado`
   - item do checklist: `pendente`, `concluido`, `nao_aplicavel`
@@ -205,11 +223,14 @@ Proximo passo recomendado:
 2. subir `npm run dev:web`
 3. validar visualmente a home nova no estilo `AdminLTE`
 4. validar o `Painel de reservas` com hover de cliente nos chales reservados
-5. validar o CRUD de `Manutencao` na UI com persistencia real
-6. validar a regra de elegibilidade de chale na manutencao
-7. validar o CRUD de `Modelo` e `Checklist de limpeza` na UI com persistencia real
-8. validar se os checklists criados aparecem corretamente com seus itens
-9. validar o vinculo de comodidades diretamente pela UI de `chales`
+5. validar o login com a nova arte de fundo e a transicao ate o dashboard
+6. validar o CRUD de `Manutenção` na UI com persistencia real
+7. validar o checkout de uma reserva e confirmar a criacao automatica da manutencao de `limpeza`
+8. validar que um chale com manutencao apenas de `limpeza` continua aceitando nova reserva
+9. validar que um chale com manutencao `corretiva`, `preventiva` ou `inspescao` continua bloqueando nova reserva
+10. validar o CRUD de `Modelo` e `Checklist de limpeza` na UI com persistencia real
+11. validar se os checklists criados aparecem corretamente com seus itens
+12. validar o vinculo de comodidades diretamente pela UI de `chales`
 
 Depois disso:
 

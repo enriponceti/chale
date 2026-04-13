@@ -225,7 +225,7 @@ export function ManutencoesManager({
       return;
     }
 
-    const confirmed = window.confirm(`Excluir a manutencao #${item.id}?`);
+    const confirmed = window.confirm(`Excluir a manutenção #${item.id}?`);
     if (!confirmed) {
       return;
     }
@@ -243,12 +243,12 @@ export function ManutencoesManager({
   return (
     <Stack spacing={3}>
       <PageHeader
-        eyebrow="Manutencao"
+        eyebrow="Manutenção"
         title="Operacao tecnica dos chales"
-        description="Controle as manutencoes preventivas e corretivas com impacto direto na disponibilidade dos chales."
+        description="Controle as manutenções preventivas e corretivas com impacto direto na disponibilidade dos chales."
         action={
           <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={handleOpenCreate}>
-            Nova manutencao
+            Nova manutenção
           </Button>
         }
       />
@@ -323,7 +323,7 @@ export function ManutencoesManager({
                 </TableCell>
                 <TableCell align="right">{formatCurrency(item.custo)}</TableCell>
                 <TableCell align="right" sx={{ whiteSpace: "nowrap", pr: 2 }}>
-                  <IconButton onClick={(event) => handleOpenMenu(event, item)} aria-label="Acoes da manutencao">
+                  <IconButton onClick={(event) => handleOpenMenu(event, item)} aria-label="Ações da manutenção">
                     <SettingsRoundedIcon />
                   </IconButton>
                 </TableCell>
@@ -367,7 +367,7 @@ export function ManutencoesManager({
       </Menu>
 
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-        <DialogTitle>{editingId ? "Editar manutencao" : "Nova manutencao"}</DialogTitle>
+        <DialogTitle>{editingId ? "Editar manutenção" : "Nova manutenção"}</DialogTitle>
         <DialogContent>
           <Box
             sx={{
@@ -396,7 +396,7 @@ export function ManutencoesManager({
             </TextField>
             <TextField
               select
-              label="Tipo de manutencao"
+              label="Tipo de manutenção"
               value={form.tipoManutencao}
               onChange={(event) =>
                 setForm((current) => ({
@@ -411,7 +411,7 @@ export function ManutencoesManager({
               <MenuItem value="inspescao">Inspescao</MenuItem>
             </TextField>
             <TextField
-              label="Descricao do problema"
+              label="Descrição do problema"
               value={form.descricaoProblema}
               onChange={(event) =>
                 setForm((current) => ({ ...current, descricaoProblema: event.target.value }))
@@ -442,11 +442,11 @@ export function ManutencoesManager({
             >
               <MenuItem value="aberta">Aberta</MenuItem>
               <MenuItem value="em_andamento">Em andamento</MenuItem>
-              <MenuItem value="concluida">Concluida</MenuItem>
+              <MenuItem value="concluida">Concluída</MenuItem>
               <MenuItem value="cancelada">Cancelada</MenuItem>
             </TextField>
             <TextField
-              label="Data de inicio"
+              label="Data de início"
               type="date"
               value={form.dataInicio}
               onChange={(event) =>
@@ -486,7 +486,7 @@ export function ManutencoesManager({
               }
             />
             <TextField
-              label="Observacao"
+              label="Observação"
               value={form.observacao}
               onChange={(event) =>
                 setForm((current) => ({ ...current, observacao: event.target.value }))

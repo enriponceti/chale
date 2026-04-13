@@ -76,7 +76,7 @@ const pageMeta: Record<string, { title: string; subtitle: string }> = {
     subtitle: "Inventario de itens vinculados aos chales"
   },
   "/manutencao": {
-    title: "Manutencao",
+    title: "Manutenção",
     subtitle: "Chamados tecnicos e disponibilidade"
   },
   "/checklists": {
@@ -125,7 +125,7 @@ function SidebarContent({
         </Box>
         <Box>
           <Typography fontWeight={700} fontSize="1.1rem">
-            Serra AdminLTE
+            Chalés AdminLTE
           </Typography>
           <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.65)" }}>
             Hospedagem e operacao

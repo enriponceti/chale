@@ -13,7 +13,7 @@ import {
   TextField,
   Typography
 } from "@mui/material";
-import { FormEvent, startTransition, useState } from "react";
+import { FormEvent, startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../components/auth/auth-provider";
 
@@ -29,6 +29,10 @@ export default function LoginPage() {
   const [senha, setSenha] = useState(defaultCredentials.senha);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    router.prefetch("/");
+  }, [router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,12 +78,15 @@ export default function LoginPage() {
             sx={{
               display: { xs: "none", md: "block" },
               overflow: "hidden",
-              background:
-                "linear-gradient(160deg, rgba(15, 107, 99, 0.98) 0%, rgba(8, 55, 51, 0.96) 52%, rgba(217, 119, 6, 0.94) 100%)",
+              position: "relative",
+              backgroundImage:
+                "linear-gradient(160deg, rgba(6, 33, 31, 0.72) 0%, rgba(6, 33, 31, 0.56) 45%, rgba(128, 76, 12, 0.42) 100%), url('/fortim_login.webp')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
               color: "common.white"
             }}
           >
-            <CardContent sx={{ p: 5, height: "100%" }}>
+            <CardContent sx={{ p: 5, height: "100%", position: "relative", zIndex: 1 }}>
               <Stack justifyContent="space-between" sx={{ height: "100%" }}>
                 <Stack spacing={3}>
                   <Box
@@ -96,21 +103,14 @@ export default function LoginPage() {
                   </Box>
                   <Stack spacing={1.5}>
                     <Typography variant="overline" sx={{ letterSpacing: "0.18em", opacity: 0.8 }}>
-                      Serra Admin
+                      Chalés Mahalo J
                     </Typography>
-                    <Typography variant="h3">Operacao central da sua hospedagem</Typography>
+                    <Typography variant="h3">Operação central das suas hospedagens</Typography>
                     <Typography sx={{ maxWidth: 420, opacity: 0.82 }}>
                       Entre no painel para administrar reservas, disponibilidade, clientes e a rotina
-                      dos chales com uma base pronta para crescer.
+                      dos chalés.
                     </Typography>
                   </Stack>
-                </Stack>
-
-                <Stack spacing={1.5}>
-                  <Typography fontWeight={700}>Acesso inicial para desenvolvimento</Typography>
-                  <Typography sx={{ opacity: 0.82 }}>
-                    Use as credenciais demo da API enquanto conectamos os formularios de cadastro.
-                  </Typography>
                 </Stack>
               </Stack>
             </CardContent>
@@ -126,9 +126,6 @@ export default function LoginPage() {
                   </Typography>
                 </Stack>
 
-                <Alert icon={<LockOutlinedIcon fontSize="inherit" />} severity="info">
-                  Usuario demo: <strong>admin@serra.local</strong> | Senha demo: <strong>admin123</strong>
-                </Alert>
 
                 {error ? <Alert severity="error">{error}</Alert> : null}
 
