@@ -3,15 +3,16 @@ import { ChalesStatusPanel } from "../components/dashboard/chales-status-panel";
 import { ExperiencePanel } from "../components/dashboard/experience-panel";
 import { ReservationsTable } from "../components/dashboard/reservations-table";
 import { StatCard } from "../components/dashboard/stat-card";
-import { getChales, getClientes, getDashboard, getReservasDetalhadas } from "../lib/api";
+import { getChales, getClientes, getDashboard, getManutencoes, getReservasDetalhadas } from "../lib/api";
 import { capitalize, formatCurrency, formatDateRange } from "../lib/format";
 
 export default async function HomePage() {
-  const [dashboard, chales, reservas, clientes] = await Promise.all([
+  const [dashboard, chales, reservas, clientes, manutencoes] = await Promise.all([
     getDashboard(),
     getChales(),
     getReservasDetalhadas(),
-    getClientes()
+    getClientes(),
+    getManutencoes()
   ]);
   const dashboardCards = [
     {
@@ -30,7 +31,7 @@ export default async function HomePage() {
       helper: `${dashboard.todayCheckouts} check-outs previstos hoje`
     },
     {
-      label: "Manutencoes abertas",
+      label: "Manutenções abertas",
       value: String(dashboard.maintenanceOpen),
       helper: "Acompanhe impacto na disponibilidade"
     }
@@ -47,14 +48,19 @@ export default async function HomePage() {
   }));
 
   const activeReservationStatuses = new Set(["pendente", "confirmada", "hospedado"]);
+  const activeMaintenanceStatuses = new Set(["aberta", "em_andamento"]);
   const chaleCards = chales.map((chale) => {
     const activeReservation = reservas.find(
       (reserva) =>
         reserva.idChale === chale.id && activeReservationStatuses.has(reserva.statusReserva)
     );
+    const activeMaintenance = manutencoes.find(
+      (manutencao) =>
+        manutencao.idChale === chale.id && activeMaintenanceStatuses.has(manutencao.status)
+    );
 
     const status =
-      chale.status === "manutencao"
+      activeMaintenance
         ? ("manutencao" as const)
         : activeReservation
           ? ("reservado" as const)
@@ -62,7 +68,7 @@ export default async function HomePage() {
 
     const detalhe =
       status === "manutencao"
-        ? "Unidade indisponivel para novas reservas."
+        ? `Manutenção - ${capitalize(activeMaintenance?.tipoManutencao ?? "")}`
         : activeReservation
           ? `Reserva #${activeReservation.id} entre ${formatDateRange(
               activeReservation.dataCheckinPrevisto,

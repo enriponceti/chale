@@ -4,7 +4,36 @@ import { isMockMode } from "../../lib/data-source.js";
 import { AppError } from "../../lib/http.js";
 import { getReservationListItems, nextId, store } from "../../lib/store.js";
 import { ReservationEntity } from "../../types/domain.js";
+import { ensureCheckoutCleaningMaintenance } from "../manutencoes/manutencoes.service.js";
 import { ReservaInput } from "./reservas.schemas.js";
+
+const blockingMaintenanceStatuses = new Set(["aberta", "em_andamento"]);
+const nonBlockingMaintenanceTypes = new Set(["limpeza"]);
+
+function hasBlockingMaintenanceInStore(idChale: number) {
+  return store.manutencoes.some(
+    (item) =>
+      item.idChale === idChale &&
+      blockingMaintenanceStatuses.has(item.status) &&
+      !nonBlockingMaintenanceTypes.has(item.tipoManutencao)
+  );
+}
+
+async function hasBlockingMaintenanceInPrisma(idChale: number) {
+  const count = await prisma.manutencao.count({
+    where: {
+      idChale,
+      status: {
+        in: Array.from(blockingMaintenanceStatuses)
+      },
+      tipoManutencao: {
+        notIn: Array.from(nonBlockingMaintenanceTypes)
+      }
+    }
+  });
+
+  return count > 0;
+}
 
 function mapReservationEntity(item: {
   id: number;
@@ -168,7 +197,9 @@ function buildReservation(
     throw new AppError("Cliente nao encontrado", 404);
   }
 
-  if (chale.status === "manutencao") {
+  const isUpdatingSameChaleReservation = existing?.idChale === input.idChale;
+
+  if (!isUpdatingSameChaleReservation && hasBlockingMaintenanceInStore(input.idChale)) {
     throw new AppError("Este chale esta em manutencao e nao pode receber reserva", 409);
   }
 
@@ -233,17 +264,22 @@ function buildReservation(
   };
 }
 
-export function createReserva(input: ReservaInput) {
+export async function createReserva(input: ReservaInput) {
   if (!isMockMode()) {
     return createReservaInPrisma(input);
   }
 
   const reserva = buildReservation(input, nextId("reservas"));
   store.reservas.push(reserva);
+
+  if (reserva.dataCheckoutReal) {
+    await ensureCheckoutCleaningMaintenance(reserva.idChale, reserva.dataCheckoutReal);
+  }
+
   return reserva;
 }
 
-export function updateReserva(id: number, input: ReservaInput) {
+export async function updateReserva(id: number, input: ReservaInput) {
   if (!isMockMode()) {
     return updateReservaInPrisma(id, input);
   }
@@ -253,7 +289,16 @@ export function updateReserva(id: number, input: ReservaInput) {
     throw new AppError("Reserva nao encontrada", 404);
   }
 
-  store.reservas[index] = buildReservation(input, id, store.reservas[index]);
+  const previousReserva = store.reservas[index];
+  store.reservas[index] = buildReservation(input, id, previousReserva);
+
+  if (!previousReserva.dataCheckoutReal && store.reservas[index].dataCheckoutReal) {
+    await ensureCheckoutCleaningMaintenance(
+      store.reservas[index].idChale,
+      store.reservas[index].dataCheckoutReal
+    );
+  }
+
   return store.reservas[index];
 }
 
@@ -287,7 +332,7 @@ async function createReservaInPrisma(input: ReservaInput) {
     throw new AppError("Cliente nao encontrado", 404);
   }
 
-  if (chale.status === "manutencao") {
+  if (await hasBlockingMaintenanceInPrisma(input.idChale)) {
     throw new AppError("Este chale esta em manutencao e nao pode receber reserva", 409);
   }
 
@@ -349,6 +394,10 @@ async function createReservaInPrisma(input: ReservaInput) {
     }
   });
 
+  if (reserva.dataCheckoutReal) {
+    await ensureCheckoutCleaningMaintenance(reserva.idChale, toDateOnly(reserva.dataCheckoutReal));
+  }
+
   return mapReservationEntity(reserva);
 }
 
@@ -367,6 +416,11 @@ async function updateReservaInPrisma(id: number, input: ReservaInput) {
 
   if (!chale) {
     throw new AppError("Chale nao encontrado", 404);
+  }
+
+  const isUpdatingSameChaleReservation = existing.idChale === input.idChale;
+  if (!isUpdatingSameChaleReservation && (await hasBlockingMaintenanceInPrisma(input.idChale))) {
+    throw new AppError("Este chale esta em manutencao e nao pode receber reserva", 409);
   }
 
   const qtdHospedes = input.qtdAdultos + input.qtdCriancas;
@@ -426,6 +480,10 @@ async function updateReservaInPrisma(id: number, input: ReservaInput) {
       observacao: input.observacao
     }
   });
+
+  if (!existing.dataCheckoutReal && reserva.dataCheckoutReal) {
+    await ensureCheckoutCleaningMaintenance(reserva.idChale, toDateOnly(reserva.dataCheckoutReal));
+  }
 
   return mapReservationEntity(reserva);
 }

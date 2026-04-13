@@ -5,6 +5,7 @@ node_modules
 .env.*
 dist
 .next
+.next-dev
 coverage
 apps/api/generated
 *.log

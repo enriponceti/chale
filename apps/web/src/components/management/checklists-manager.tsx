@@ -379,7 +379,7 @@ export function ChecklistsManager({
               <TableHead>
                 <TableRow>
                   <TableCell>Chale</TableCell>
-                  <TableCell>Manutencao</TableCell>
+                  <TableCell>Manutenção</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Periodo</TableCell>
                   <TableCell>Itens</TableCell>
@@ -532,7 +532,7 @@ export function ChecklistsManager({
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
               <TextField
                 select
-                label="Manutencao"
+                label="Manutenção"
                 value={checklistForm.idManutencao}
                 onChange={(event) =>
                   setChecklistForm((current) => ({ ...current, idManutencao: Number(event.target.value) }))

@@ -34,7 +34,7 @@ const items = [
   },
   {
     icon: <BuildCircleOutlinedIcon color="primary" />,
-    title: "Fila de manutencao",
+    title: "Fila de manutenção",
     value: "3 chamados abertos",
     progress: 34
   }

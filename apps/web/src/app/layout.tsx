@@ -5,7 +5,7 @@ import { AppThemeProvider } from "../theme/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Serra Admin",
+  title: "Chalés Admin",
   description: "Painel administrativo para operacao de chales"
 };
 

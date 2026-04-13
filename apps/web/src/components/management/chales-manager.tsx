@@ -687,7 +687,7 @@ export function ChalesManager({ initialChales }: Props) {
             >
               <MenuItem value="ativo">Ativo</MenuItem>
               <MenuItem value="inativo">Inativo</MenuItem>
-              <MenuItem value="manutencao">Manutencao</MenuItem>
+              <MenuItem value="manutencao">Manutenção</MenuItem>
             </TextField>
             <TextField
               label="Capacidade maxima *"

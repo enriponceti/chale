@@ -27,7 +27,7 @@ const statusMap = {
     color: "warning" as const
   },
   manutencao: {
-    label: "Manutencao",
+    label: "Manutenção",
     color: "default" as const
   }
 };
